@@ -1,3 +1,80 @@
 # GAME_STATUS.md
 
-此文档完全由AI维护，用于说明当前的文件架构，设计思路，以及一些需要注意的地方，包括完成度等等，旨在积累经验，辅助后续ai的工作，维护当前的状态。每次更新完，你应当更新这个文档。
+此文档由 AI 维护，用于记录 Jumping Ninja 的实现状态、结构和后续注意事项。
+
+## 当前版本
+
+- 游戏版本：V1
+- 完成日期：2026-08-23
+- Unity：6000.5.9f1（arm64）
+- 当前构建目标：Android
+- 状态：核心玩法与菜单流程已实现，Unity 编译及轻量配置验证通过
+
+## V1 已实现功能
+
+- 进入游戏后显示带 Potatoed Mice Logo 的加载页。
+- 首次运行要求创建本地 Ninja 用户，仅需用户名。
+- 本地用户表、当前用户和最高分使用 `PlayerPrefs` 保存，存储键为 `JumpingNinja.Users.v1`。
+- 主菜单包含开始游戏、排行榜和切换用户。
+- 排行榜按最高分降序显示；切换用户页支持创建新用户。
+- Ninja 是默认 1×1 的红色方块，始终受 2D 重力影响。
+- 点击左/右半屏会把 Ninja 速度重设为偏离竖直方向指定角度的左上/右上速度。
+- 地图默认宽 30 格，左右边缘由 1×1 白色墙块组成；碰墙后横向速度归零，纵向速度保留。
+- 黑色方块会立即结束本局；第 0 层下方为完整致死地板。
+- 无限地图按默认 30 格高度动态向上生成。层间有 1–2 个随机的 1×3 缺口，缺口周围不会生成额外障碍。
+- 第 1–5 层无额外障碍，第 6–10 层每层 1 个，第 11–20 层每层 2 个，之后每十层递增。
+- 镜头默认显示 15 格横向范围，纵向范围按设备宽高比计算；跟随 Ninja 并限制在地图左右和底部边界内。
+- 左上角显示当前等级及下一个可超越的用户分数，包括当前用户自己的历史纪录。
+- 超越其他用户或刷新个人纪录时显示限时提示。
+- 暂停菜单支持返回主菜单；恢复游戏前显示完整 3 秒倒计时。
+- 死亡后以本局到达的最高层数结算，可重试或返回主菜单。
+
+## 主要文件结构
+
+- `Assets/Scripts/GameBootstrap.cs`：场景加载后自动建立 V1 游戏入口。
+- `Assets/Scripts/GameApp.cs`：加载页、用户创建、主菜单、排行榜、切换用户和游戏流程切换。
+- `Assets/Scripts/UserRepository.cs`：本地用户表和最高分持久化。
+- `Assets/Scripts/RuntimeUi.cs`：运行时 uGUI 创建工具与统一视觉样式。
+- `Assets/Scripts/JumpingNinjaConfig.cs`：Inspector 可调参数定义。
+- `Assets/Scripts/Gameplay/GameController.cs`：单局状态、HUD、计分、纪录提示、暂停和结算。
+- `Assets/Scripts/Gameplay/NinjaController.cs`：Ninja 物理、左右转向和碰撞规则。
+- `Assets/Scripts/Gameplay/WorldGenerator.cs`：无限分层地图、墙、缺口及障碍生成。
+- `Assets/Scripts/Gameplay/CameraFollower.cs`：竖屏自适应镜头跟随和边界限制。
+- `Assets/Resources/JumpingNinjaConfig.asset`：可直接在 Inspector 修改的 V1 参数资产。
+- `Assets/Editor/V1ProjectSetup.cs`：Android 项目设置及轻量验证命令。
+
+## Inspector 可调参数
+
+在 `Assets/Resources/JumpingNinjaConfig.asset` 中可调整：
+
+- 左右跳跃角度 `steeringAngle`（默认 15°）
+- 跳跃速度、重力倍率和 Ninja 尺寸
+- 地图宽度、层高、初始 Y 坐标和镜头横向范围
+- 预生成层数
+- 地图随机种子：`0` 表示每局随机，非零值表示生成可复现地图
+- 加载时间、提示持续时间和主要颜色
+
+## Android 设置
+
+- 方向：仅 Portrait
+- Application ID：`com.potatoedmice.jumpingninja`
+- 最低 Android API：26
+- 架构：ARM64
+- Scripting Backend：IL2CPP
+- Product Name：Jumping Ninja
+- Company Name：Potatoed Mice
+
+## 验证记录
+
+- Unity CLI 在 Android 活动目标下成功导入并编译全部新增代码。
+- 编译日志没有 C# error 或 warning。
+- `V1ProjectSetup.ValidateV1` 已验证配置资产、Logo 引用、地图/镜头参数、竖屏、Application ID 和 Build Settings 场景。
+- 按开发者要求没有进行大量测试，也没有生成 APK；尚未做真机触控、性能和发布签名验证。
+
+## 后续注意事项
+
+- 当前角色和地图使用纯色方块，没有动画、音效或粒子效果。
+- 用户及排行榜完全保存在本机，不包含联网账户或云排行榜。
+- 当前 Build Settings 仍使用 `Assets/Scenes/SampleScene.unity`；游戏内容由运行时 Bootstrap 构建。
+- 切换用户页面当前显示排行榜前 8 个用户，足够 V1 使用；用户规模扩大时应改为滚动列表。
+- 发布 Android Release 前需要配置正式 keystore，并执行至少一次真机 APK/AAB 构建测试。
