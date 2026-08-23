@@ -57,32 +57,37 @@ namespace JumpingNinja
 
         private void OnCollisionEnter2D(Collision2D collision)
         {
-            ResolveCollision(collision.collider);
+            ResolveCollision(collision.collider, collision.otherCollider);
         }
 
         private void OnCollisionStay2D(Collision2D collision)
         {
-            ResolveCollision(collision.collider);
+            ResolveCollision(collision.collider, collision.otherCollider);
         }
 
-        private void ResolveCollision(Collider2D other)
+        private void ResolveCollision(Collider2D first, Collider2D second)
         {
             if (!alive)
             {
                 return;
             }
 
-            if (other.GetComponent<HazardBlock>() != null)
+            if (HasMarker<HazardBlock>(first) || HasMarker<HazardBlock>(second))
             {
                 game.KillPlayer();
                 return;
             }
 
-            if (other.GetComponent<SideWall>() != null)
+            if (HasMarker<SideWall>(first) || HasMarker<SideWall>(second))
             {
                 Vector2 velocity = body.linearVelocity;
                 body.linearVelocity = new Vector2(0f, velocity.y);
             }
+        }
+
+        private static bool HasMarker<T>(Collider2D collider) where T : Component
+        {
+            return collider != null && collider.GetComponent<T>() != null;
         }
     }
 }

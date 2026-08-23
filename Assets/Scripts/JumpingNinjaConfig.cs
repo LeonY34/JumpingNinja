@@ -15,10 +15,10 @@ namespace JumpingNinja
         [Min(0.1f)] public float playerSize = 1f;
 
         [Header("Infinite Map")]
-        [Min(8)] public int mapWidth = 30;
+        [Min(8)] public int mapWidth = 25;
         [Min(5f)] public float cameraVisibleWidth = 15f;
-        [Min(8)] public int layerHeight = 30;
-        [Min(1f)] public float playerStartY = 15f;
+        [Min(8)] public int layerHeight = 15;
+        [Min(1f)] public float playerStartY = 7.5f;
         [Min(2)] public int generateAheadLayers = 3;
         [Tooltip("Use 0 to create a different map for every run. Use another value for a repeatable map.")]
         public int randomSeed;

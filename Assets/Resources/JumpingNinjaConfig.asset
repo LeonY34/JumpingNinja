@@ -17,10 +17,10 @@ MonoBehaviour:
   jumpSpeed: 12
   gravityScale: 2.8
   playerSize: 1
-  mapWidth: 30
+  mapWidth: 25
   cameraVisibleWidth: 15
-  layerHeight: 30
-  playerStartY: 15
+  layerHeight: 15
+  playerStartY: 7.5
   generateAheadLayers: 3
   randomSeed: 0
   loadingDuration: 1.25
