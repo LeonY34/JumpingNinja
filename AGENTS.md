@@ -19,3 +19,5 @@
 ## 参考文档
 
 可参考/Applications/Unity/Hub/Editor/6000.5.9f1/Documentation，为官方的unity文档。
+
+windows在G:\unity\Editor\6000.5.9f1\Editor\Data\Documentation

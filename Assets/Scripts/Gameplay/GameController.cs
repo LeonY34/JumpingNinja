@@ -88,7 +88,17 @@ namespace JumpingNinja
             paused = false;
             countingDown = false;
             Time.timeScale = 1f;
-            ninja.StopForDeath();
+            float animationDuration = ninja != null ? ninja.StopForDeath() : 0f;
+            StartCoroutine(FinishRunAfterDeathAnimation(animationDuration));
+        }
+
+        private IEnumerator FinishRunAfterDeathAnimation(float delay)
+        {
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+
             app.FinishRun(highestLevel);
         }
 

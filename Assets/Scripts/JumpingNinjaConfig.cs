@@ -8,11 +8,20 @@ namespace JumpingNinja
         [Header("Brand")]
         public Sprite logo;
 
+        [Header("Ninja Appearance")]
+        public Sprite ninjaSprite;
+
         [Header("Ninja Movement")]
         [Range(1f, 45f)] public float steeringAngle = 15f;
         [Min(1f)] public float jumpSpeed = 12f;
         [Min(0.1f)] public float gravityScale = 2.8f;
         [Min(0.1f)] public float playerSize = 1f;
+
+        [Header("Ninja Animation")]
+        [Min(0.05f)] public float jumpAnimationDuration = 0.24f;
+        [Range(0f, 0.4f)] public float jumpStretch = 0.18f;
+        [Min(0.1f)] public float deathAnimationDuration = 0.75f;
+        [Range(0f, 0.3f)] public float deathShake = 0.12f;
 
         [Header("Infinite Map")]
         [Min(8)] public int mapWidth = 25;

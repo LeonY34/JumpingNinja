@@ -10,6 +10,7 @@ namespace JumpingNinjaEditor
     {
         private const string ConfigPath = "Assets/Resources/JumpingNinjaConfig.asset";
         private const string LogoPath = "Assets/Logos/logo.png";
+        private const string NinjaSpritePath = "Assets/Art/Ninja/ninja-head.png";
 
         [MenuItem("Jumping Ninja/Configure V1 Android Project")]
         public static void ConfigureV1()
@@ -41,6 +42,17 @@ namespace JumpingNinjaEditor
             if (config.logo == null)
             {
                 throw new System.InvalidOperationException("The V1 config does not reference the game logo.");
+            }
+
+            Sprite ninjaSprite = AssetDatabase.LoadAssetAtPath<Sprite>(NinjaSpritePath);
+            if (ninjaSprite == null || config.ninjaSprite != ninjaSprite)
+            {
+                throw new System.InvalidOperationException("The V1 config does not reference the square ninja sprite.");
+            }
+
+            if (config.jumpAnimationDuration <= 0f || config.deathAnimationDuration <= 0f)
+            {
+                throw new System.InvalidOperationException("The Ninja animation durations must be greater than zero.");
             }
 
             if (config.SafeMapWidth < 8 || config.SafeLayerHeight < 8 || config.SafeCameraWidth > config.SafeMapWidth)
@@ -101,7 +113,14 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException($"No Sprite was found in {LogoPath}.");
             }
 
+            Sprite ninjaSprite = AssetDatabase.LoadAssetAtPath<Sprite>(NinjaSpritePath);
+            if (ninjaSprite == null)
+            {
+                throw new System.InvalidOperationException($"No Sprite was found in {NinjaSpritePath}.");
+            }
+
             config.logo = logo;
+            config.ninjaSprite = ninjaSprite;
             EditorUtility.SetDirty(config);
         }
     }
