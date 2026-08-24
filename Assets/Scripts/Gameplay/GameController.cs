@@ -47,6 +47,7 @@ namespace JumpingNinja
             CaptureRecordTargets();
             CreateWorld();
             CreateNinja();
+            Physics2D.SyncTransforms();
             CreateCamera();
             CreateHud();
             UpdateScoreDisplay();

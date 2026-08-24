@@ -7,6 +7,8 @@ namespace JumpingNinja
         private GameController game;
         private JumpingNinjaConfig config;
         private Rigidbody2D body;
+        private BoxCollider2D bodyCollider;
+        private readonly RaycastHit2D[] castHits = new RaycastHit2D[16];
         private Transform visual;
         private SpriteRenderer spriteRenderer;
         private Vector3 baseVisualScale = Vector3.one;
@@ -40,14 +42,20 @@ namespace JumpingNinja
             baseVisualColor = spriteRenderer.color;
             ResetVisual();
 
-            BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();
-            collider.sharedMaterial = physicsMaterial;
+            bodyCollider = gameObject.AddComponent<BoxCollider2D>();
+            bodyCollider.size = Vector2.one;
+            bodyCollider.isTrigger = false;
+            bodyCollider.sharedMaterial = physicsMaterial;
 
             body = gameObject.AddComponent<Rigidbody2D>();
+            body.bodyType = RigidbodyType2D.Dynamic;
+            body.simulated = true;
             body.gravityScale = config.gravityScale;
             body.freezeRotation = true;
             body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+            Physics2D.SyncTransforms();
         }
 
         public void Steer(bool moveRight)
@@ -99,6 +107,72 @@ namespace JumpingNinja
             }
 
             AnimateJump();
+        }
+
+        private void FixedUpdate()
+        {
+            if (!alive || body == null || bodyCollider == null || !body.simulated)
+            {
+                return;
+            }
+
+            PreventTunneling();
+        }
+
+        private void PreventTunneling()
+        {
+            Vector2 velocity = body.linearVelocity;
+            float speed = velocity.magnitude;
+            if (speed <= Mathf.Epsilon)
+            {
+                return;
+            }
+
+            float skin = Mathf.Max(0.01f, Physics2D.defaultContactOffset);
+            float distance = speed * Time.fixedDeltaTime + skin;
+            int hitCount = bodyCollider.Cast(velocity / speed, castHits, distance);
+            RaycastHit2D nearest = default;
+            bool found = false;
+
+            for (int index = 0; index < hitCount; index++)
+            {
+                RaycastHit2D hit = castHits[index];
+                if (hit.collider == null ||
+                    (!HasMarker<HazardBlock>(hit.collider) && !HasMarker<SideWall>(hit.collider)))
+                {
+                    continue;
+                }
+
+                if (!found || hit.distance < nearest.distance)
+                {
+                    nearest = hit;
+                    found = true;
+                }
+            }
+
+            if (!found)
+            {
+                return;
+            }
+
+            Vector2 direction = velocity / speed;
+            float allowedDistance = Mathf.Max(0f, nearest.distance - skin);
+            if (HasMarker<HazardBlock>(nearest.collider))
+            {
+                body.position += direction * allowedDistance;
+                game.KillPlayer();
+                return;
+            }
+
+            // A side wall only cancels the horizontal part of a jump. Check the
+            // contact normal so moving away from a wall is never suppressed.
+            if (HasMarker<SideWall>(nearest.collider) && Vector2.Dot(velocity, nearest.normal) < 0f)
+            {
+                Vector2 position = body.position;
+                position.x += direction.x * allowedDistance;
+                body.position = position;
+                body.linearVelocity = new Vector2(0f, velocity.y);
+            }
         }
 
         private void AnimateJump()
@@ -170,6 +244,16 @@ namespace JumpingNinja
             ResolveCollision(collision.collider, collision.otherCollider);
         }
 
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            ResolveCollision(other, null);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            ResolveCollision(other, null);
+        }
+
         private void ResolveCollision(Collider2D first, Collider2D second)
         {
             if (!alive)
@@ -192,7 +276,7 @@ namespace JumpingNinja
 
         private static bool HasMarker<T>(Collider2D collider) where T : Component
         {
-            return collider != null && collider.GetComponent<T>() != null;
+            return collider != null && collider.GetComponentInParent<T>() != null;
         }
     }
 }

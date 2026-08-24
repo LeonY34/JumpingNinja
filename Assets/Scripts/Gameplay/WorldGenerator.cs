@@ -36,12 +36,22 @@ namespace JumpingNinja
 
         public void EnsureGeneratedThrough(int highestSegment)
         {
+            bool generatedAny = false;
             for (int segment = 0; segment <= highestSegment; segment++)
             {
                 if (!segments.ContainsKey(segment))
                 {
                     GenerateSegment(segment);
+                    generatedAny = true;
                 }
+            }
+
+            // Runtime-created static colliders are positioned immediately after they are
+            // added. Auto Sync Transforms is intentionally disabled in Project Settings,
+            // so make their final positions visible to Physics2D before the Ninja moves.
+            if (generatedAny)
+            {
+                Physics2D.SyncTransforms();
             }
         }
 
@@ -232,18 +242,25 @@ namespace JumpingNinja
             bool isHazard,
             bool isWall)
         {
-            GameObject block = new GameObject(objectName, typeof(SpriteRenderer), typeof(BoxCollider2D));
+            GameObject block = new GameObject(objectName, typeof(BoxCollider2D));
             block.transform.SetParent(parent, false);
             block.transform.position = new Vector3(position.x, position.y, 0f);
-            block.transform.localScale = new Vector3(size.x, size.y, 1f);
 
-            SpriteRenderer renderer = block.GetComponent<SpriteRenderer>();
+            // Keep physics geometry independent from visual transform scaling. This makes
+            // the collider's world-space size deterministic on every target platform.
+            BoxCollider2D collider = block.GetComponent<BoxCollider2D>();
+            collider.size = size;
+            collider.isTrigger = false;
+            collider.sharedMaterial = frictionlessMaterial;
+
+            GameObject visual = new GameObject("Visual", typeof(SpriteRenderer));
+            visual.transform.SetParent(block.transform, false);
+            visual.transform.localScale = new Vector3(size.x, size.y, 1f);
+
+            SpriteRenderer renderer = visual.GetComponent<SpriteRenderer>();
             renderer.sprite = solidSprite;
             renderer.color = color;
             renderer.sortingOrder = 0;
-
-            BoxCollider2D collider = block.GetComponent<BoxCollider2D>();
-            collider.sharedMaterial = frictionlessMaterial;
 
             if (isHazard)
             {

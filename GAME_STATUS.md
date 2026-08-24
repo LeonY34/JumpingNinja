@@ -22,7 +22,7 @@
 - 死亡时忍者头像会震动、弹起、旋转、缩小并淡出，动画结束后才显示结算界面。
 - 点击左/右半屏会把 Ninja 速度重设为偏离竖直方向指定角度的左上/右上速度。
 - 地图默认宽 25 格，左右边缘由 1×1 白色墙块组成；碰墙后横向速度归零，纵向速度保留。
-- 黑色方块会立即结束本局；第 0 层下方为完整致死地板。碰撞判定会检查碰撞双方的 Collider，避免误把 Ninja 自身当成被撞方块。
+- 黑色方块会立即结束本局；第 0 层下方为完整致死地板。所有方块使用与视觉缩放分离的显式尺寸实体碰撞体；Ninja 除碰撞回调外还会在每个物理帧做 Collider 形状扫掠，防止高速跳跃穿透黑块或白墙。
 - 无限地图按默认 15 格高度动态向上生成。层间有 1–2 个随机的 1×3 缺口，缺口周围不会生成额外障碍。
 - 第 1–5 层无额外障碍，第 6–10 层每层 1 个，第 11–20 层每层 2 个，之后每十层递增。
 - 镜头默认显示 15 格横向范围，纵向范围按设备宽高比计算；跟随 Ninja 并限制在地图左右和底部边界内。
@@ -77,6 +77,7 @@
 - Unity CLI 的 `projects info` 可完整识别 `G:/unity/Projects/JumpingNinja`（版本、GUID、URP 和包清单均正常），确认项目结构及 Mac 到 Windows 的迁移内容有效。
 - 开发者桌面会话已确认 Unity Personal 为 Assigned、Unlimited；此前 batchmode/GUI 许可失败来自受限进程无法共享 Hub IPC 和访问令牌，不是账户未激活。
 - 2026-08-24 忍者动画更新由 Unity `6000.5.9f1` 完成 `Assembly-CSharp.dll` 与 `Assembly-CSharp-Editor.dll` 编译，Tundra 构建和 Mono 域重载成功，日志没有 C# 编译错误。
+- 2026-08-24 碰撞修复使用 Unity `6000.5.9f1` 自带 Roslyn 和当前 Bee 响应文件重新编译 `Assembly-CSharp.dll`、`Assembly-CSharp-Editor.dll`，两项均为 0 error；同时确认 Physics2D 层碰撞矩阵全部开启，方块与 Ninja 均为非 Trigger 的 2D Collider。
 - 方形忍者 PNG 为 1254×1254 RGBA，四角 alpha 为 0；Unity 配置资产已引用该 Sprite，Android 导入最大尺寸为 1024。
 - Unity CLI 在 Android 活动目标下成功导入并编译全部新增代码。
 - 编译日志没有 C# error 或 warning。
