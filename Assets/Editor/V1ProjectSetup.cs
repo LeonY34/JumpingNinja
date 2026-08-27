@@ -13,6 +13,7 @@ namespace JumpingNinjaEditor
         private const string NinjaSpritePath = "Assets/Art/Ninja/ninja-head.png";
         private const string BackgroundPatternPath = "Assets/Art/World/ninja-background-pattern.png";
         private const string HazardBlockPath = "Assets/Art/World/hazard-block.png";
+        private const string WallBlockPath = "Assets/Art/World/safe-wall-block.png";
 
         [MenuItem("Jumping Ninja/Configure V1 Android Project")]
         public static void ConfigureV1()
@@ -54,8 +55,10 @@ namespace JumpingNinjaEditor
 
             Sprite backgroundPattern = AssetDatabase.LoadAssetAtPath<Sprite>(BackgroundPatternPath);
             Sprite hazardBlock = AssetDatabase.LoadAssetAtPath<Sprite>(HazardBlockPath);
+            Sprite wallBlock = AssetDatabase.LoadAssetAtPath<Sprite>(WallBlockPath);
             if (backgroundPattern == null || config.backgroundPatternSprite != backgroundPattern ||
-                hazardBlock == null || config.hazardBlockSprite != hazardBlock)
+                hazardBlock == null || config.hazardBlockSprite != hazardBlock ||
+                wallBlock == null || config.wallBlockSprite != wallBlock)
             {
                 throw new System.InvalidOperationException("The V1 config does not reference the world visual assets.");
             }
@@ -95,6 +98,11 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException($"Unexpected Android application identifier: {identifier}");
             }
 
+            if (PlayerSettings.bundleVersion != "1.0.2" || PlayerSettings.Android.bundleVersionCode != 2)
+            {
+                throw new System.InvalidOperationException("The Android version is not configured as v1.0.2.");
+            }
+
             bool hasScene = EditorBuildSettings.scenes.Any(scene => scene.enabled && scene.path == "Assets/Scenes/SampleScene.unity");
             if (!hasScene)
             {
@@ -108,8 +116,8 @@ namespace JumpingNinjaEditor
         {
             PlayerSettings.companyName = "Potatoed Mice";
             PlayerSettings.productName = "Jumping Ninja";
-            PlayerSettings.bundleVersion = "1.0.0";
-            PlayerSettings.Android.bundleVersionCode = 1;
+            PlayerSettings.bundleVersion = "1.0.2";
+            PlayerSettings.Android.bundleVersionCode = 2;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.potatoedmice.jumpingninja");
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = false;
@@ -145,15 +153,17 @@ namespace JumpingNinjaEditor
 
             Sprite backgroundPattern = AssetDatabase.LoadAssetAtPath<Sprite>(BackgroundPatternPath);
             Sprite hazardBlock = AssetDatabase.LoadAssetAtPath<Sprite>(HazardBlockPath);
-            if (backgroundPattern == null || hazardBlock == null)
+            Sprite wallBlock = AssetDatabase.LoadAssetAtPath<Sprite>(WallBlockPath);
+            if (backgroundPattern == null || hazardBlock == null || wallBlock == null)
             {
-                throw new System.InvalidOperationException("The world background or hazard block Sprite is missing.");
+                throw new System.InvalidOperationException("A world background, hazard block, or wall block Sprite is missing.");
             }
 
             config.logo = logo;
             config.ninjaSprite = ninjaSprite;
             config.backgroundPatternSprite = backgroundPattern;
             config.hazardBlockSprite = hazardBlock;
+            config.wallBlockSprite = wallBlock;
             config.mapWidth = 15;
             config.cameraVisibleWidth = 9f;
             config.layerHeight = 9;

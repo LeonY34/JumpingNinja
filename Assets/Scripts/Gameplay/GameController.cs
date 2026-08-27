@@ -321,6 +321,7 @@ namespace JumpingNinja
         private IEnumerator ShowOpeningHint()
         {
             Image card = RuntimeUi.CreateImage("Opening Hint", gameCanvas.transform, new Color(0.04f, 0.05f, 0.07f, 0.78f));
+            card.raycastTarget = false;
             RuntimeUi.Place(card.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(820f, 210f), new Vector2(0f, -390f));
             Text message = RuntimeUi.CreateText("Message", card.transform, "TAP LEFT OR RIGHT\nTO JUMP", 44, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
             RuntimeUi.Stretch(message.rectTransform);
@@ -343,6 +344,7 @@ namespace JumpingNinja
             {
                 string message = notificationQueue.Dequeue();
                 Image card = RuntimeUi.CreateImage("Record Notification", gameCanvas.transform, RuntimeUi.Red);
+                card.raycastTarget = false;
                 RuntimeUi.Place(card.rectTransform, new Vector2(0.5f, 1f), new Vector2(760f, 110f), new Vector2(0f, -270f));
                 Text label = RuntimeUi.CreateText("Label", card.transform, message, 36, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
                 RuntimeUi.Stretch(label.rectTransform);

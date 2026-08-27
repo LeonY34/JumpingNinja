@@ -261,7 +261,12 @@ namespace JumpingNinja
 
             SpriteRenderer renderer = visual.GetComponent<SpriteRenderer>();
             bool usesHazardArt = isHazard && config.hazardBlockSprite != null;
-            renderer.sprite = usesHazardArt ? config.hazardBlockSprite : solidSprite;
+            bool usesWallArt = isWall && config.wallBlockSprite != null;
+            renderer.sprite = usesHazardArt
+                ? config.hazardBlockSprite
+                : usesWallArt
+                    ? config.wallBlockSprite
+                    : solidSprite;
             int level = Mathf.Max(0, Mathf.FloorToInt(position.y / config.SafeLayerHeight));
             renderer.color = usesHazardArt ? config.GetHazardTint(level) : color;
             renderer.sortingOrder = 0;

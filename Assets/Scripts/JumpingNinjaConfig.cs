@@ -14,6 +14,7 @@ namespace JumpingNinja
         [Header("World Appearance")]
         public Sprite backgroundPatternSprite;
         public Sprite hazardBlockSprite;
+        public Sprite wallBlockSprite;
         [Min(1)] public int visualThemeLayerInterval = 10;
         [Range(0f, 0.5f)] public float backgroundPatternOpacity = 0.18f;
         public Color[] backgroundThemeColors =
