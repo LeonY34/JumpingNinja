@@ -11,6 +11,8 @@ namespace JumpingNinjaEditor
         private const string ConfigPath = "Assets/Resources/JumpingNinjaConfig.asset";
         private const string LogoPath = "Assets/Logos/logo.png";
         private const string NinjaSpritePath = "Assets/Art/Ninja/ninja-head.png";
+        private const string BackgroundPatternPath = "Assets/Art/World/ninja-background-pattern.png";
+        private const string HazardBlockPath = "Assets/Art/World/hazard-block.png";
 
         [MenuItem("Jumping Ninja/Configure V1 Android Project")]
         public static void ConfigureV1()
@@ -50,6 +52,14 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException("The V1 config does not reference the square ninja sprite.");
             }
 
+            Sprite backgroundPattern = AssetDatabase.LoadAssetAtPath<Sprite>(BackgroundPatternPath);
+            Sprite hazardBlock = AssetDatabase.LoadAssetAtPath<Sprite>(HazardBlockPath);
+            if (backgroundPattern == null || config.backgroundPatternSprite != backgroundPattern ||
+                hazardBlock == null || config.hazardBlockSprite != hazardBlock)
+            {
+                throw new System.InvalidOperationException("The V1 config does not reference the world visual assets.");
+            }
+
             if (config.jumpAnimationDuration <= 0f || config.deathAnimationDuration <= 0f)
             {
                 throw new System.InvalidOperationException("The Ninja animation durations must be greater than zero.");
@@ -58,6 +68,20 @@ namespace JumpingNinjaEditor
             if (config.SafeMapWidth < 8 || config.SafeLayerHeight < 8 || config.SafeCameraWidth > config.SafeMapWidth)
             {
                 throw new System.InvalidOperationException("The V1 map and camera configuration is invalid.");
+            }
+
+            if (config.SafeMapWidth != 15 || config.SafeCameraWidth != 9f || config.SafeLayerHeight != 9 ||
+                config.visualThemeLayerInterval != 10 || config.backgroundThemeColors == null ||
+                config.backgroundThemeColors.Length == 0 || config.hazardThemeTints == null ||
+                config.hazardThemeTints.Length == 0)
+            {
+                throw new System.InvalidOperationException("The V1 map dimensions or ten-level visual themes are not configured.");
+            }
+
+            if (config.GetBackgroundColor(0) == config.GetBackgroundColor(10) ||
+                config.GetHazardTint(0) == config.GetHazardTint(10))
+            {
+                throw new System.InvalidOperationException("The world visuals do not change after ten levels.");
             }
 
             if (PlayerSettings.defaultInterfaceOrientation != UIOrientation.Portrait)
@@ -119,8 +143,22 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException($"No Sprite was found in {NinjaSpritePath}.");
             }
 
+            Sprite backgroundPattern = AssetDatabase.LoadAssetAtPath<Sprite>(BackgroundPatternPath);
+            Sprite hazardBlock = AssetDatabase.LoadAssetAtPath<Sprite>(HazardBlockPath);
+            if (backgroundPattern == null || hazardBlock == null)
+            {
+                throw new System.InvalidOperationException("The world background or hazard block Sprite is missing.");
+            }
+
             config.logo = logo;
             config.ninjaSprite = ninjaSprite;
+            config.backgroundPatternSprite = backgroundPattern;
+            config.hazardBlockSprite = hazardBlock;
+            config.mapWidth = 15;
+            config.cameraVisibleWidth = 9f;
+            config.layerHeight = 9;
+            config.playerStartY = 4.5f;
+            config.visualThemeLayerInterval = 10;
             EditorUtility.SetDirty(config);
         }
     }

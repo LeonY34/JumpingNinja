@@ -80,14 +80,17 @@ namespace JumpingNinja
             GameObject bottom = new GameObject("Bottom Boundary");
             bottom.transform.SetParent(transform, false);
 
-            CreateBlock(
-                bottom.transform,
-                "Death Floor",
-                new Vector2(config.SafeMapWidth * 0.5f, -0.5f),
-                new Vector2(config.SafeMapWidth - 2f, 1f),
-                config.hazardColor,
-                true,
-                false);
+            for (int x = 1; x < config.SafeMapWidth - 1; x++)
+            {
+                CreateBlock(
+                    bottom.transform,
+                    $"Death Floor {x}",
+                    new Vector2(x + 0.5f, -0.5f),
+                    Vector2.one,
+                    config.hazardColor,
+                    true,
+                    false);
+            }
 
             CreateBlock(bottom.transform, "Left Corner", new Vector2(0.5f, -0.5f), Vector2.one, config.wallColor, false, true);
             CreateBlock(bottom.transform, "Right Corner", new Vector2(config.SafeMapWidth - 0.5f, -0.5f), Vector2.one, config.wallColor, false, true);
@@ -255,12 +258,19 @@ namespace JumpingNinja
 
             GameObject visual = new GameObject("Visual", typeof(SpriteRenderer));
             visual.transform.SetParent(block.transform, false);
-            visual.transform.localScale = new Vector3(size.x, size.y, 1f);
 
             SpriteRenderer renderer = visual.GetComponent<SpriteRenderer>();
-            renderer.sprite = solidSprite;
-            renderer.color = color;
+            bool usesHazardArt = isHazard && config.hazardBlockSprite != null;
+            renderer.sprite = usesHazardArt ? config.hazardBlockSprite : solidSprite;
+            int level = Mathf.Max(0, Mathf.FloorToInt(position.y / config.SafeLayerHeight));
+            renderer.color = usesHazardArt ? config.GetHazardTint(level) : color;
             renderer.sortingOrder = 0;
+
+            Vector2 spriteSize = renderer.sprite.bounds.size;
+            visual.transform.localScale = new Vector3(
+                size.x / Mathf.Max(0.0001f, spriteSize.x),
+                size.y / Mathf.Max(0.0001f, spriteSize.y),
+                1f);
 
             if (isHazard)
             {

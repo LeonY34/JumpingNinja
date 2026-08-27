@@ -14,6 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::JumpingNinja.JumpingNinjaConfig
   logo: {fileID: -4320295261928297051, guid: 10fc19cab4c4648d6966cb3aad5c4eb8, type: 3}
   ninjaSprite: {fileID: 21300000, guid: b9b1030d2c10401f983be2d5b8803a39, type: 3}
+  backgroundPatternSprite: {fileID: 21300000, guid: 8c8f5b97777b42cca682a9a2f45633e7, type: 3}
+  hazardBlockSprite: {fileID: 21300000, guid: 1b42b7e07529437f9dedfeb19423220f, type: 3}
+  visualThemeLayerInterval: 10
+  backgroundPatternOpacity: 0.18
+  backgroundThemeColors:
+  - {r: 0.22, g: 0.3, b: 0.4, a: 1}
+  - {r: 0.29, g: 0.23, b: 0.39, a: 1}
+  - {r: 0.18, g: 0.34, b: 0.32, a: 1}
+  - {r: 0.4, g: 0.28, b: 0.22, a: 1}
+  - {r: 0.2, g: 0.3, b: 0.23, a: 1}
+  - {r: 0.35, g: 0.21, b: 0.28, a: 1}
+  hazardThemeTints:
+  - {r: 0.72, g: 0.8, b: 0.96, a: 1}
+  - {r: 0.86, g: 0.72, b: 0.96, a: 1}
+  - {r: 0.66, g: 0.92, b: 0.86, a: 1}
+  - {r: 0.96, g: 0.78, b: 0.64, a: 1}
+  - {r: 0.72, g: 0.9, b: 0.7, a: 1}
+  - {r: 0.94, g: 0.68, b: 0.76, a: 1}
   steeringAngle: 15
   jumpSpeed: 12
   gravityScale: 2.8
@@ -22,15 +40,15 @@ MonoBehaviour:
   jumpStretch: 0.18
   deathAnimationDuration: 0.75
   deathShake: 0.12
-  mapWidth: 25
-  cameraVisibleWidth: 15
-  layerHeight: 15
-  playerStartY: 7.5
+  mapWidth: 15
+  cameraVisibleWidth: 9
+  layerHeight: 9
+  playerStartY: 4.5
   generateAheadLayers: 3
   randomSeed: 0
   loadingDuration: 1.25
   notificationDuration: 2.5
-  worldBackground: {r: 0.58, g: 0.72, b: 0.82, a: 1}
+  worldBackground: {r: 0.22, g: 0.3, b: 0.4, a: 1}
   ninjaColor: {r: 0.88, g: 0.18, b: 0.14, a: 1}
   wallColor: {r: 1, g: 1, b: 1, a: 1}
   hazardColor: {r: 0.025, g: 0.03, b: 0.04, a: 1}
