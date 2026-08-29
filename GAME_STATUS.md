@@ -5,10 +5,10 @@
 ## 当前版本
 
 - 游戏版本：v1.0.3
-- 最近更新：2026-08-29
+- 最近更新：2026-08-30
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android
-- 状态：核心玩法与菜单流程已实现；v1.0.3 Android APK 已构建并完成产物检查，等待发布到 GitHub Release
+- 状态：核心玩法与菜单流程已实现；v1.0.3 Android APK 已发布到 GitHub Release
 
 ## V1 已实现功能
 
@@ -96,6 +96,7 @@
 - 2026-08-30 清理损坏的可再生 `Library` 缓存并移除项目未引用的实验包 `com.unity.pipeline` 后，Unity `6000.5.9f1` 完成全量资源导入、ARM64 IL2CPP/NDK 编译和 Gradle `assembleRelease`；增量构建最终以 `Build Finished, Result: Success`、返回码 0 退出。
 - `Builds/JumpingNinja-v1.0.3.apk` 的包名为 `com.potatoedmice.jumpingninja`，Version Name 为 `1.0.3`，Version Code 为 `3`，最低 API 为 26；文件大小 39,462,249 字节，SHA-256 为 `2886FC0E9D1280A23186070C214DAEEDF264877B9E1B82FD7C6AC45B78E13A0C`。
 - APK 签名结构已通过 `apksigner` 验证（APK Signature Scheme v2）；当前签名证书为 Unity 使用的 Android Debug 证书。
+- v1.0.3 已作为正式 Git 标签和 GitHub Release 发布，Release 地址为 `https://github.com/LeonY34/JumpingNinja/releases/tag/v1.0.3`，APK 资源状态为 `uploaded`。
 - 本次修改通过现有 `Assembly-CSharp.csproj` 重新编译，结果为 0 error、0 warning。
 - 本次临时 Unity 副本已完成脚本编译阶段，但因 Mac 剩余空间不足未完成全量资源导入；临时生成目录已清理，未生成 APK/AAB。
 - 按开发者要求跳过手机安装与真机玩法测试；本次仅执行 Unity 构建、APK 元数据、哈希及签名结构检查。
