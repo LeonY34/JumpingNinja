@@ -1,0 +1,4 @@
+interface:
+  display_name: "Windows Unity Release"
+  short_description: "Build and publish Jumping Ninja Android releases"
+  default_prompt: "Use $windows-unity-release to publish a tagged Android APK release on Windows."

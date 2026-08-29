@@ -37,6 +37,9 @@
 ## 主要文件结构
 
 - `README.md`：项目简介、APK 下载入口和开发环境说明。
+- `scripts/release-windows.ps1`：Windows 下一键完成 Android 构建、Git 标签和 GitHub Release 发布。
+- `.agents/skills/windows-unity-release/SKILL.md`：仓库级 Windows Release 操作说明。
+- `ReleaseNotes/`：随仓库维护的各版本 GitHub Release Notes。
 - `Assets/Scripts/GameBootstrap.cs`：场景加载后自动建立 V1 游戏入口。
 - `Assets/Scripts/GameApp.cs`：加载页、用户创建、主菜单、排行榜、切换用户和游戏流程切换。
 - `Assets/Scripts/UserRepository.cs`：本地用户表和最高分持久化。
