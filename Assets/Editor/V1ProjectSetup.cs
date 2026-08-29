@@ -103,9 +103,9 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException($"Unexpected Android application identifier: {identifier}");
             }
 
-            if (PlayerSettings.bundleVersion != "1.0.2" || PlayerSettings.Android.bundleVersionCode != 2)
+            if (PlayerSettings.bundleVersion != "1.0.3" || PlayerSettings.Android.bundleVersionCode != 3)
             {
-                throw new System.InvalidOperationException("The Android version is not configured as v1.0.2.");
+                throw new System.InvalidOperationException("The Android version is not configured as v1.0.3.");
             }
 
             bool hasScene = EditorBuildSettings.scenes.Any(scene => scene.enabled && scene.path == "Assets/Scenes/SampleScene.unity");
@@ -121,8 +121,8 @@ namespace JumpingNinjaEditor
         {
             PlayerSettings.companyName = "Potatoed Mice";
             PlayerSettings.productName = "Jumping Ninja";
-            PlayerSettings.bundleVersion = "1.0.2";
-            PlayerSettings.Android.bundleVersionCode = 2;
+            PlayerSettings.bundleVersion = "1.0.3";
+            PlayerSettings.Android.bundleVersionCode = 3;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.potatoedmice.jumpingninja");
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = false;

@@ -40,6 +40,7 @@ namespace JumpingNinja
             baseVisualColor = spriteRenderer.color;
             ResetVisual();
 
+            // Keep collision response entirely in Unity's frictionless 2D solver.
             BoxCollider2D bodyCollider = gameObject.AddComponent<BoxCollider2D>();
             bodyCollider.size = Vector2.one * config.SafePlayerColliderScale;
             bodyCollider.isTrigger = false;

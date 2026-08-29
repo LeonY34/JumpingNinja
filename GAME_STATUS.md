@@ -4,11 +4,11 @@
 
 ## 当前版本
 
-- 游戏版本：v1.0.2
+- 游戏版本：v1.0.3
 - 最近更新：2026-08-29
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android
-- 状态：核心玩法与菜单流程已实现；主分支已完成碰撞重构，Android Release 工作按开发者要求暂停
+- 状态：核心玩法与菜单流程已实现；v1.0.3 Android APK 已构建并完成产物检查，等待发布到 GitHub Release
 
 ## V1 已实现功能
 
@@ -74,8 +74,8 @@
 - Scripting Backend：IL2CPP
 - Product Name：Jumping Ninja
 - Company Name：Potatoed Mice
-- Version Name：1.0.2
-- Android Version Code：2
+- Version Name：1.0.3
+- Android Version Code：3
 
 ## 验证记录
 
@@ -93,9 +93,12 @@
 - 2026-08-28 Unity `6000.5.9f1` 已成功导入忍者背景与黑块 Sprite；Tundra 脚本构建成功，`V1ProjectSetup.ValidateV1` 验证 15 格地图、9 格视野、9 格层高、素材引用及每 10 层主题变化后，以返回码 0 退出。
 - 2026-08-28 v1.0.2 更新在已打开的 Unity `6000.5.9f1` 编辑器中成功导入浅色墙砖，Tundra 完成运行时和 Editor 程序集编译；`V1ProjectSetup.ValidateV1` 验证墙砖引用、版本名 `1.0.2` 和 Android Version Code `2` 后通过。移除一次性验证入口后的最终清理编译同样成功。
 - 2026-08-29 碰撞重构由 Unity `6000.5.9f1` 两次完成 Tundra 脚本构建：首次完整构建更新 10 项，第二次增量构建更新 1 项，均成功且无 C# 编译错误。批处理在编译后的 Unity 域重载阶段长时间无日志并持续增长内存，因此为保护开发机主动停止，未取得本轮 `V1ProjectSetup.ValidateV1` 的最终成功标记；碰撞箱范围检查已加入该验证方法。
+- 2026-08-30 清理损坏的可再生 `Library` 缓存并移除项目未引用的实验包 `com.unity.pipeline` 后，Unity `6000.5.9f1` 完成全量资源导入、ARM64 IL2CPP/NDK 编译和 Gradle `assembleRelease`；增量构建最终以 `Build Finished, Result: Success`、返回码 0 退出。
+- `Builds/JumpingNinja-v1.0.3.apk` 的包名为 `com.potatoedmice.jumpingninja`，Version Name 为 `1.0.3`，Version Code 为 `3`，最低 API 为 26；文件大小 39,462,249 字节，SHA-256 为 `2886FC0E9D1280A23186070C214DAEEDF264877B9E1B82FD7C6AC45B78E13A0C`。
+- APK 签名结构已通过 `apksigner` 验证（APK Signature Scheme v2）；当前签名证书为 Unity 使用的 Android Debug 证书。
 - 本次修改通过现有 `Assembly-CSharp.csproj` 重新编译，结果为 0 error、0 warning。
 - 本次临时 Unity 副本已完成脚本编译阶段，但因 Mac 剩余空间不足未完成全量资源导入；临时生成目录已清理，未生成 APK/AAB。
-- 按开发者要求没有进行大量测试，也没有生成 APK；尚未做真机触控、性能和发布签名验证。
+- 按开发者要求跳过手机安装与真机玩法测试；本次仅执行 Unity 构建、APK 元数据、哈希及签名结构检查。
 
 ## 仓库清理
 
@@ -108,4 +111,4 @@
 - 用户及排行榜完全保存在本机，不包含联网账户或云排行榜。
 - 当前 Build Settings 仍使用 `Assets/Scenes/SampleScene.unity`；游戏内容由运行时 Bootstrap 构建。
 - 切换用户页面当前显示排行榜前 8 个用户，足够 V1 使用；用户规模扩大时应改为滚动列表。
-- 发布 Android Release 前需要配置正式 keystore，并执行至少一次真机 APK/AAB 构建测试。
+- 当前 v1.0.3 APK 使用 Android Debug 证书签名，可直接下载安装；后续若作为正式长期分发版本，应配置并妥善保存自有 keystore，否则无法保证跨开发机的升级签名一致性。
