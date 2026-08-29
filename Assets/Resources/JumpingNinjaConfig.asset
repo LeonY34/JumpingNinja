@@ -37,6 +37,7 @@ MonoBehaviour:
   jumpSpeed: 12
   gravityScale: 2.8
   playerSize: 1
+  playerColliderScale: 0.82
   jumpAnimationDuration: 0.24
   jumpStretch: 0.18
   deathAnimationDuration: 0.75

@@ -68,6 +68,11 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException("The Ninja animation durations must be greater than zero.");
             }
 
+            if (config.SafePlayerColliderScale < 0.5f || config.SafePlayerColliderScale >= 1f)
+            {
+                throw new System.InvalidOperationException("The Ninja collider must be smaller than its visual bounds.");
+            }
+
             if (config.SafeMapWidth < 8 || config.SafeLayerHeight < 8 || config.SafeCameraWidth > config.SafeMapWidth)
             {
                 throw new System.InvalidOperationException("The V1 map and camera configuration is invalid.");
@@ -168,6 +173,7 @@ namespace JumpingNinjaEditor
             config.cameraVisibleWidth = 9f;
             config.layerHeight = 9;
             config.playerStartY = 4.5f;
+            config.playerColliderScale = 0.82f;
             config.visualThemeLayerInterval = 10;
             EditorUtility.SetDirty(config);
         }

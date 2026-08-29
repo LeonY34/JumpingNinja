@@ -41,6 +41,7 @@ namespace JumpingNinja
         [Min(1f)] public float jumpSpeed = 12f;
         [Min(0.1f)] public float gravityScale = 2.8f;
         [Min(0.1f)] public float playerSize = 1f;
+        [Range(0.5f, 1f)] public float playerColliderScale = 0.82f;
 
         [Header("Ninja Animation")]
         [Min(0.05f)] public float jumpAnimationDuration = 0.24f;
@@ -68,6 +69,7 @@ namespace JumpingNinja
         public int SafeMapWidth => Mathf.Max(8, mapWidth);
         public int SafeLayerHeight => Mathf.Max(8, layerHeight);
         public float SafeCameraWidth => Mathf.Clamp(cameraVisibleWidth, 5f, SafeMapWidth);
+        public float SafePlayerColliderScale => Mathf.Clamp(playerColliderScale, 0.5f, 1f);
 
         public Color GetBackgroundColor(int level)
         {
