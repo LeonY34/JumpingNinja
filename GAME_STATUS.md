@@ -101,6 +101,8 @@
 - `Builds/JumpingNinja-v1.0.3.apk` 的包名为 `com.potatoedmice.jumpingninja`，Version Name 为 `1.0.3`，Version Code 为 `3`，最低 API 为 26；文件大小 39,462,249 字节，SHA-256 为 `2886FC0E9D1280A23186070C214DAEEDF264877B9E1B82FD7C6AC45B78E13A0C`。
 - APK 签名结构已通过 `apksigner` 验证（APK Signature Scheme v2）；当前签名证书为 Unity 使用的 Android Debug 证书。
 - v1.0.3 已作为正式 Git 标签和 GitHub Release 发布，Release 地址为 `https://github.com/LeonY34/JumpingNinja/releases/tag/v1.0.3`，APK 资源状态为 `uploaded`。
+- 2026-08-30 新增 `scripts/release-windows.ps1` 与仓库级 `windows-unity-release` skill；PowerShell 语法解析和 skill 官方校验器均通过，脚本也正确拒绝了覆盖已有 `v1.0.3` Release。
+- 脚本已实测发布 `v1.0.3-test` prerelease：标签与 `v1.0.3` 指向同一提交，复用同一个 APK，远端资源状态为 `uploaded`，大小和 SHA-256 与 `v1.0.3` 完全一致；本次未重新构建或执行真机测试。
 - 本次修改通过现有 `Assembly-CSharp.csproj` 重新编译，结果为 0 error、0 warning。
 - 本次临时 Unity 副本已完成脚本编译阶段，但因 Mac 剩余空间不足未完成全量资源导入；临时生成目录已清理，未生成 APK/AAB。
 - 按开发者要求跳过手机安装与真机玩法测试；本次仅执行 Unity 构建、APK 元数据、哈希及签名结构检查。
