@@ -271,6 +271,8 @@ try {
             throw "Unity exited without a successful Windows build marker. See $windowsLog"
         }
 
+        $burstDebugDirectory = Join-Path $windowsOutputDirectory 'Jumping Ninja_BurstDebugInformation_DoNotShip'
+        Remove-SafeBuildOutput $burstDebugDirectory
         Compress-Archive -Path (Join-Path $windowsOutputDirectory '*') -DestinationPath $windowsZip -CompressionLevel Optimal
     }
 

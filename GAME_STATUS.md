@@ -8,7 +8,7 @@
 - 最近更新：2026-08-30
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android、Windows x64
-- 状态：v1.0.4 键盘控制与双平台发布流程已实现，等待构建和发布
+- 状态：v1.0.4 已提供 Android APK 与 Windows x64 ZIP，并发布到 GitHub Release
 
 ## V1 已实现功能
 
@@ -110,6 +110,10 @@
 - v1.0.3 已作为正式 Git 标签和 GitHub Release 发布，Release 地址为 `https://github.com/LeonY34/JumpingNinja/releases/tag/v1.0.3`，APK 资源状态为 `uploaded`。
 - 2026-08-30 新增 `scripts/release-windows.ps1` 与仓库级 `windows-unity-release` skill；PowerShell 语法解析和 skill 官方校验器均通过，脚本也正确拒绝了覆盖已有 `v1.0.3` Release。
 - 脚本已实测发布 `v1.0.3-test` prerelease：标签与 `v1.0.3` 指向同一提交，复用同一个 APK，远端资源状态为 `uploaded`，大小和 SHA-256 与 `v1.0.3` 完全一致；本次未重新构建或执行真机测试。
+- 2026-08-30 v1.0.4 的键盘输入代码已通过 Android 和 StandaloneWindows64 两个平台的 Unity 脚本编译；Android 构建以 `Build Finished, Result: Success` 完成，Windows 构建同时写出 `JUMPING_NINJA_WINDOWS_BUILD_OK` 成功标记。
+- `Builds/JumpingNinja-v1.0.4.apk` 大小为 39,467,465 字节，SHA-256 为 `3AF41F4C7E86D355AC76D5E23BD6D41C08A2827F91C82893CC9B03929B9704C8`；包名、Version Name、Version Code、最低/目标 API 分别为 `com.potatoedmice.jumpingninja`、`1.0.4`、`4`、`26`/`36`，APK Signature Scheme v2 验证通过，证书仍为 Android Debug。
+- `JumpingNinja-v1.0.4-Windows.zip` 已排除 Unity 的 `BurstDebugInformation_DoNotShip` 目录，大小为 43,901,695 字节，SHA-256 为 `B15B7C4E26271DD7E940B881F8FB5827555AA7A3F721E98DCCCC2074851EF54E`；ZIP 包含 EXE、Data、Mono 运行时及所需 DLL，EXE 未进行代码签名。
+- v1.0.4 已发布至 `https://github.com/LeonY34/JumpingNinja/releases/tag/v1.0.4`，Android 与 Windows 两个远端资源状态均为 `uploaded`；本次执行构建与静态产物检查，未执行手机安装、真机玩法或 Windows GUI 玩法测试。
 - 本次修改通过现有 `Assembly-CSharp.csproj` 重新编译，结果为 0 error、0 warning。
 - 本次临时 Unity 副本已完成脚本编译阶段，但因 Mac 剩余空间不足未完成全量资源导入；临时生成目录已清理，未生成 APK/AAB。
 - 按开发者要求跳过手机安装与真机玩法测试；本次仅执行 Unity 构建、APK 元数据、哈希及签名结构检查。
@@ -125,4 +129,4 @@
 - 用户及排行榜完全保存在本机，不包含联网账户或云排行榜。
 - 当前 Build Settings 仍使用 `Assets/Scenes/SampleScene.unity`；游戏内容由运行时 Bootstrap 构建。
 - 切换用户页面当前显示排行榜前 8 个用户，足够 V1 使用；用户规模扩大时应改为滚动列表。
-- 当前 v1.0.3 APK 使用 Android Debug 证书签名，可直接下载安装；后续若作为正式长期分发版本，应配置并妥善保存自有 keystore，否则无法保证跨开发机的升级签名一致性。
+- 当前 v1.0.4 APK 使用 Android Debug 证书签名，Windows EXE 未进行代码签名；后续若作为正式长期分发版本，应配置并妥善保存 Android keystore，并考虑为 Windows 程序配置代码签名证书。
