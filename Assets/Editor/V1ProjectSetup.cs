@@ -103,9 +103,15 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException($"Unexpected Android application identifier: {identifier}");
             }
 
-            if (PlayerSettings.bundleVersion != "1.0.3" || PlayerSettings.Android.bundleVersionCode != 3)
+            if (PlayerSettings.bundleVersion != "1.0.4" || PlayerSettings.Android.bundleVersionCode != 4)
             {
-                throw new System.InvalidOperationException("The Android version is not configured as v1.0.3.");
+                throw new System.InvalidOperationException("The release version is not configured as v1.0.4.");
+            }
+
+            if (PlayerSettings.defaultScreenWidth != 540 || PlayerSettings.defaultScreenHeight != 960 ||
+                PlayerSettings.fullScreenMode != FullScreenMode.Windowed || PlayerSettings.resizableWindow)
+            {
+                throw new System.InvalidOperationException("The Windows player is not configured as a fixed portrait window.");
             }
 
             bool hasScene = EditorBuildSettings.scenes.Any(scene => scene.enabled && scene.path == "Assets/Scenes/SampleScene.unity");
@@ -121,9 +127,13 @@ namespace JumpingNinjaEditor
         {
             PlayerSettings.companyName = "Potatoed Mice";
             PlayerSettings.productName = "Jumping Ninja";
-            PlayerSettings.bundleVersion = "1.0.3";
-            PlayerSettings.Android.bundleVersionCode = 3;
+            PlayerSettings.bundleVersion = "1.0.4";
+            PlayerSettings.Android.bundleVersionCode = 4;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.potatoedmice.jumpingninja");
+            PlayerSettings.defaultScreenWidth = 540;
+            PlayerSettings.defaultScreenHeight = 960;
+            PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
+            PlayerSettings.resizableWindow = false;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.allowedAutorotateToPortrait = false;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;

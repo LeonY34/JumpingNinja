@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace JumpingNinja
@@ -61,6 +62,8 @@ namespace JumpingNinja
                 return;
             }
 
+            HandleKeyboardInput();
+
             if (ninja.Position.y < -2f)
             {
                 KillPlayer();
@@ -76,6 +79,24 @@ namespace JumpingNinja
                 CheckRecords(previous, highestLevel);
                 UpdateScoreDisplay();
             }
+        }
+
+        private void HandleKeyboardInput()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (!AcceptsInput || keyboard == null)
+            {
+                return;
+            }
+
+            bool leftPressed = keyboard.aKey.wasPressedThisFrame || keyboard.leftArrowKey.wasPressedThisFrame;
+            bool rightPressed = keyboard.dKey.wasPressedThisFrame || keyboard.rightArrowKey.wasPressedThisFrame;
+            if (leftPressed == rightPressed)
+            {
+                return;
+            }
+
+            ninja.Steer(rightPressed);
         }
 
         public void KillPlayer()

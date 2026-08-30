@@ -4,11 +4,11 @@
 
 ## 当前版本
 
-- 游戏版本：v1.0.3
+- 游戏版本：v1.0.4
 - 最近更新：2026-08-30
 - Unity：6000.5.9f1（arm64）
-- 当前构建目标：Android
-- 状态：核心玩法与菜单流程已实现；v1.0.3 Android APK 已发布到 GitHub Release
+- 当前构建目标：Android、Windows x64
+- 状态：v1.0.4 键盘控制与双平台发布流程已实现，等待构建和发布
 
 ## V1 已实现功能
 
@@ -20,7 +20,7 @@
 - Ninja 视觉保持 1×1 红色方形忍者头像，物理碰撞箱默认缩为视觉范围的 82%，始终受 2D 重力影响。
 - 每次向左或向右跳跃时，忍者头像会播放压缩、拉伸、位移和方向倾斜动画；动画只影响视觉子对象，不改变碰撞体。
 - 死亡时忍者头像会震动、弹起、旋转、缩小并淡出，动画结束后才显示结算界面。
-- 点击左/右半屏会把 Ninja 速度重设为偏离竖直方向指定角度的左上/右上速度。
+- 点击左/右半屏，或按下 `A` / `D`、左 / 右方向键，会把 Ninja 速度重设为偏离竖直方向指定角度的左上/右上速度。
 - 地图默认宽 15 格，左右边缘由 1×1 浅色忍者石墙组成；墙砖与黑色机关砖采用匹配的边框、斜纹和手里剑图案，并以象牙白/银灰和深黑色保持清晰区分。白墙碰撞完全交给 Unity 2D 求解器，不再在持续接触时手动清零横向速度，因此可以立即向离墙方向跳开。
 - 黑色方块会在 Unity 报告真实碰撞进入时结束本局；第 0 层下方为完整致死地板。黑块及致死地板使用克制的深色忍者纹理，并随层数切换色调。所有方块均为实体碰撞体；Ninja 使用 Continuous 碰撞检测以及摩擦力 0、弹性 0 的物理材质，不再使用会提前判死的 Collider 预测扫掠。
 - 无限地图按默认 9 格高度动态向上生成。层间有 1–2 个随机的 1×3 缺口，缺口周围不会生成额外障碍。
@@ -37,7 +37,7 @@
 ## 主要文件结构
 
 - `README.md`：项目简介、APK 下载入口和开发环境说明。
-- `scripts/release-windows.ps1`：Windows 下一键完成 Android 构建、Git 标签和 GitHub Release 发布。
+- `scripts/release-windows.ps1`：Windows 下一键完成 Android 与 Windows 双平台构建、Git 标签和 GitHub Release 发布。
 - `.agents/skills/windows-unity-release/SKILL.md`：仓库级 Windows Release 操作说明。
 - `ReleaseNotes/`：随仓库维护的各版本 GitHub Release Notes。
 - `Assets/Scripts/GameBootstrap.cs`：场景加载后自动建立 V1 游戏入口。
@@ -54,7 +54,8 @@
 - `Assets/Scripts/Gameplay/WorldGenerator.cs`：无限分层地图、墙、缺口及障碍生成。
 - `Assets/Scripts/Gameplay/CameraFollower.cs`：竖屏自适应镜头跟随和边界限制。
 - `Assets/Resources/JumpingNinjaConfig.asset`：可直接在 Inspector 修改的 V1 参数资产。
-- `Assets/Editor/V1ProjectSetup.cs`：Android 项目设置及轻量验证命令。
+- `Assets/Editor/V1ProjectSetup.cs`：Android 与 Windows 项目设置及轻量验证命令。
+- `Assets/Editor/WindowsReleaseBuilder.cs`：Windows x64 Player 命令行构建入口。
 
 ## Inspector 可调参数
 
@@ -78,8 +79,14 @@
 - Scripting Backend：IL2CPP
 - Product Name：Jumping Ninja
 - Company Name：Potatoed Mice
-- Version Name：1.0.3
-- Android Version Code：3
+- Version Name：1.0.4
+- Android Version Code：4
+
+## Windows 设置
+
+- 架构：x64
+- 显示模式：540×960 固定竖屏窗口
+- 分发格式：包含完整 Player 文件的 ZIP
 
 ## 验证记录
 

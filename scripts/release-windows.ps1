@@ -13,6 +13,7 @@ param(
     [string]$UnityPath,
     [string]$Repository,
     [string]$ApkPath,
+    [string]$WindowsZipPath,
     [switch]$SkipBuild
 )
 
@@ -165,6 +166,20 @@ function Get-LocalTagCommit {
     return ($result.Output | Out-String).Trim()
 }
 
+function Remove-SafeBuildOutput {
+    param([string]$Path)
+
+    $buildRoot = [IO.Path]::GetFullPath((Join-Path $repoRoot 'Builds')).TrimEnd('\') + '\'
+    $resolvedTarget = [IO.Path]::GetFullPath($Path)
+    if (-not $resolvedTarget.StartsWith($buildRoot, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to clear an output outside the Builds directory: $resolvedTarget"
+    }
+
+    if (Test-Path -LiteralPath $resolvedTarget) {
+        Remove-Item -LiteralPath $resolvedTarget -Recurse -Force
+    }
+}
+
 Push-Location $repoRoot
 try {
     $notes = (Resolve-Path -LiteralPath $ReleaseNotesPath).Path
@@ -176,7 +191,7 @@ try {
     $headHash = Get-CommitHash 'HEAD'
 
     if (-not $SkipBuild -and $targetHash -ne $headHash) {
-        throw 'Building a non-HEAD target is not supported. Use -SkipBuild with an existing APK.'
+        throw 'Building a non-HEAD target is not supported. Use -SkipBuild with existing artifacts.'
     }
 
     if (-not $SkipBuild -or $targetHash -eq $headHash) {
@@ -191,6 +206,12 @@ try {
             throw '-SkipBuild requires -ApkPath.'
         }
         $apk = (Resolve-Path -LiteralPath $ApkPath).Path
+        $windowsZip = if ($WindowsZipPath) {
+            (Resolve-Path -LiteralPath $WindowsZipPath).Path
+        }
+        else {
+            $null
+        }
     }
     else {
         $editor = Resolve-UnityEditor $UnityPath
@@ -203,25 +224,53 @@ try {
         $logDirectory = Join-Path $repoRoot 'Logs'
         New-Item -ItemType Directory -Force -Path $buildDirectory, $logDirectory | Out-Null
         $apk = Join-Path $buildDirectory "JumpingNinja-$Tag.apk"
-        $log = Join-Path $logDirectory "Release-$Tag.log"
-        $unityArguments = @(
+        $androidLog = Join-Path $logDirectory "Release-$Tag-Android.log"
+        $androidArguments = @(
             '-batchmode',
             '-nographics',
             '-quit',
             '-projectPath', "`"$repoRoot`"",
             '-activeBuildProfile', "`"$buildProfile`"",
             '-build', "`"$apk`"",
-            '-logFile', "`"$log`""
+            '-logFile', "`"$androidLog`""
         )
 
-        Write-Host "Building $Tag with $editor"
-        $unityProcess = Start-Process -FilePath $editor -ArgumentList $unityArguments -Wait -PassThru -WindowStyle Hidden
-        if ($unityProcess.ExitCode -ne 0) {
-            throw "Unity build failed with exit code $($unityProcess.ExitCode). See $log"
+        Write-Host "Building Android APK for $Tag with $editor"
+        $androidProcess = Start-Process -FilePath $editor -ArgumentList $androidArguments -Wait -PassThru -WindowStyle Hidden
+        if ($androidProcess.ExitCode -ne 0) {
+            throw "Unity Android build failed with exit code $($androidProcess.ExitCode). See $androidLog"
         }
-        if (-not (Select-String -LiteralPath $log -SimpleMatch 'Build Finished, Result: Success' -Quiet)) {
-            throw "Unity exited without a successful build marker. See $log"
+        if (-not (Select-String -LiteralPath $androidLog -SimpleMatch 'Build Finished, Result: Success' -Quiet)) {
+            throw "Unity exited without a successful Android build marker. See $androidLog"
         }
+
+        $windowsOutputDirectory = Join-Path $buildDirectory "JumpingNinja-$Tag-Windows"
+        $windowsExecutable = Join-Path $windowsOutputDirectory 'Jumping Ninja.exe'
+        $windowsZip = Join-Path $buildDirectory "JumpingNinja-$Tag-Windows.zip"
+        $windowsLog = Join-Path $logDirectory "Release-$Tag-Windows.log"
+        Remove-SafeBuildOutput $windowsOutputDirectory
+        Remove-SafeBuildOutput $windowsZip
+        $windowsArguments = @(
+            '-batchmode',
+            '-nographics',
+            '-quit',
+            '-projectPath', "`"$repoRoot`"",
+            '-buildTarget', 'StandaloneWindows64',
+            '-executeMethod', 'JumpingNinjaEditor.WindowsReleaseBuilder.Build',
+            '-windowsOutputPath', "`"$windowsExecutable`"",
+            '-logFile', "`"$windowsLog`""
+        )
+
+        Write-Host "Building Windows player for $Tag"
+        $windowsProcess = Start-Process -FilePath $editor -ArgumentList $windowsArguments -Wait -PassThru -WindowStyle Hidden
+        if ($windowsProcess.ExitCode -ne 0) {
+            throw "Unity Windows build failed with exit code $($windowsProcess.ExitCode). See $windowsLog"
+        }
+        if (-not (Select-String -LiteralPath $windowsLog -SimpleMatch 'JUMPING_NINJA_WINDOWS_BUILD_OK' -Quiet)) {
+            throw "Unity exited without a successful Windows build marker. See $windowsLog"
+        }
+
+        Compress-Archive -Path (Join-Path $windowsOutputDirectory '*') -DestinationPath $windowsZip -CompressionLevel Optimal
     }
 
     $apkItem = Get-Item -LiteralPath $apk
@@ -229,6 +278,28 @@ try {
         throw "APK is empty: $apk"
     }
     $apkHash = (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash
+    $releaseArtifacts = @(
+        [pscustomobject]@{
+            Path = $apkItem.FullName
+            Label = "Jumping Ninja $Tag Android APK"
+            Name = 'Android APK'
+            Size = $apkItem.Length
+            Hash = $apkHash
+        }
+    )
+    if ($windowsZip) {
+        $windowsItem = Get-Item -LiteralPath $windowsZip
+        if ($windowsItem.Length -le 0) {
+            throw "Windows ZIP is empty: $windowsZip"
+        }
+        $releaseArtifacts += [pscustomobject]@{
+            Path = $windowsItem.FullName
+            Label = "Jumping Ninja $Tag Windows x64"
+            Name = 'Windows x64 ZIP'
+            Size = $windowsItem.Length
+            Hash = (Get-FileHash -LiteralPath $windowsZip -Algorithm SHA256).Hash
+        }
+    }
 
     $localTagCommit = Get-LocalTagCommit $Tag
     if ($localTagCommit -and $localTagCommit -ne $targetHash) {
@@ -272,12 +343,14 @@ try {
 
     $releaseArguments = @(
         'release', 'create', $Tag,
-        "$apk#Jumping Ninja $Tag APK",
         '--repo', $repo,
         '--verify-tag',
         '--title', "Jumping Ninja $Tag",
         '--notes-file', $notes
     )
+    foreach ($artifact in $releaseArtifacts) {
+        $releaseArguments += "$($artifact.Path)#$($artifact.Label)"
+    }
     if ($Tag -match '-') {
         $releaseArguments += '--prerelease'
     }
@@ -293,8 +366,10 @@ try {
     }
 
     Write-Host "Release complete: $Tag"
-    Write-Host "APK: $($apkItem.FullName) ($($apkItem.Length) bytes)"
-    Write-Host "SHA-256: $apkHash"
+    foreach ($artifact in $releaseArtifacts) {
+        Write-Host "$($artifact.Name): $($artifact.Path) ($($artifact.Size) bytes)"
+        Write-Host "SHA-256: $($artifact.Hash)"
+    }
     Write-Output $releaseJson
 }
 finally {

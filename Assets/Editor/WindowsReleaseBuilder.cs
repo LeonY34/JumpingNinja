@@ -7,27 +7,26 @@ using UnityEngine;
 
 namespace JumpingNinjaEditor
 {
-    public static class AndroidReleaseBuilder
+    public static class WindowsReleaseBuilder
     {
-        private const string DefaultOutputPath = "Builds/JumpingNinja-v1.0.4.apk";
+        private const string DefaultOutputPath = "Builds/JumpingNinja-v1.0.4-Windows/Jumping Ninja.exe";
 
-        public static void BuildApk()
+        public static void Build()
         {
-            string outputPath = GetArgumentValue("-androidOutputPath") ?? DefaultOutputPath;
+            string outputPath = GetArgumentValue("-windowsOutputPath") ?? DefaultOutputPath;
             outputPath = Path.GetFullPath(outputPath);
 
-            if (PlayerSettings.bundleVersion != "1.0.4" || PlayerSettings.Android.bundleVersionCode != 4)
+            if (PlayerSettings.bundleVersion != "1.0.4")
             {
-                throw new InvalidOperationException("Android release version must be v1.0.4 (version code 4).");
+                throw new InvalidOperationException("Windows release version must be v1.0.4.");
             }
 
-            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android &&
-                !EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android))
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64)
             {
-                throw new InvalidOperationException("Unity could not switch to the Android build target.");
+                throw new InvalidOperationException(
+                    "The active build target must be StandaloneWindows64. Pass -buildTarget StandaloneWindows64.");
             }
 
-            EditorUserBuildSettings.buildAppBundle = false;
             string[] scenes = EditorBuildSettings.scenes
                 .Where(scene => scene.enabled)
                 .Select(scene => scene.path)
@@ -42,7 +41,7 @@ namespace JumpingNinjaEditor
             {
                 scenes = scenes,
                 locationPathName = outputPath,
-                target = BuildTarget.Android,
+                target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None
             };
 
@@ -51,10 +50,10 @@ namespace JumpingNinjaEditor
             if (summary.result != BuildResult.Succeeded)
             {
                 throw new InvalidOperationException(
-                    $"Android APK build failed: {summary.result}, {summary.totalErrors} errors.");
+                    $"Windows build failed: {summary.result}, {summary.totalErrors} errors.");
             }
 
-            Debug.Log($"JUMPING_NINJA_ANDROID_APK_OK path={outputPath} bytes={summary.totalSize}");
+            Debug.Log($"JUMPING_NINJA_WINDOWS_BUILD_OK path={outputPath} bytes={summary.totalSize}");
         }
 
         private static string GetArgumentValue(string argumentName)
