@@ -215,7 +215,8 @@ try {
     }
     else {
         $editor = Resolve-UnityEditor $UnityPath
-        $buildProfile = Join-Path $repoRoot 'Assets\Settings\Build Profiles\JumpingNinja.asset'
+        $buildProfileRelative = 'Assets\Settings\Build Profiles\JumpingNinja.asset'
+        $buildProfile = Join-Path $repoRoot $buildProfileRelative
         if (-not (Test-Path -LiteralPath $buildProfile -PathType Leaf)) {
             throw "Android build profile not found: $buildProfile"
         }
@@ -230,7 +231,7 @@ try {
             '-nographics',
             '-quit',
             '-projectPath', "`"$repoRoot`"",
-            '-activeBuildProfile', "`"$buildProfile`"",
+            '-activeBuildProfile', "`"$buildProfileRelative`"",
             '-build', "`"$apk`"",
             '-logFile', "`"$androidLog`""
         )
