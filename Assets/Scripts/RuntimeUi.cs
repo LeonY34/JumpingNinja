@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace JumpingNinja
 {
     internal static class RuntimeUi
     {
+        public const float PortraitAspect = 9f / 16f;
+
         private static Font cachedFont;
 
         public static readonly Color Ink = new Color(0.055f, 0.067f, 0.09f, 1f);
@@ -36,9 +39,31 @@ namespace JumpingNinja
             CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1080f, 1920f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            scaler.screenMatchMode = PortraitViewport.ShouldLetterbox
+                ? CanvasScaler.ScreenMatchMode.Expand
+                : CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 0.5f;
+
+            GameObject contentObject = new GameObject("Portrait Content", typeof(RectTransform));
+            contentObject.transform.SetParent(canvasObject.transform, false);
+            RectTransform content = contentObject.GetComponent<RectTransform>();
+            Stretch(content);
+            if (PortraitViewport.ShouldLetterbox)
+            {
+                AspectRatioFitter fitter = contentObject.AddComponent<AspectRatioFitter>();
+                fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+                fitter.aspectRatio = PortraitAspect;
+            }
+
+            PortraitCanvasRoot canvasRoot = canvasObject.AddComponent<PortraitCanvasRoot>();
+            canvasRoot.Content = content;
             return canvas;
+        }
+
+        public static Transform Content(Canvas canvas)
+        {
+            PortraitCanvasRoot root = canvas.GetComponent<PortraitCanvasRoot>();
+            return root != null && root.Content != null ? root.Content : canvas.transform;
         }
 
         public static Image CreateImage(string name, Transform parent, Color color)
@@ -91,6 +116,13 @@ namespace JumpingNinja
             colors.pressedColor = new Color(0.78f, 0.78f, 0.78f, 1f);
             colors.selectedColor = Color.white;
             button.colors = colors;
+
+            Outline outline = gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(1f, 0.82f, 0.24f, 1f);
+            outline.effectDistance = new Vector2(7f, -7f);
+            outline.useGraphicAlpha = false;
+            outline.enabled = false;
+            gameObject.AddComponent<ButtonSelectionIndicator>().Initialize(outline);
             if (onClick != null)
             {
                 button.onClick.AddListener(onClick);
@@ -99,6 +131,17 @@ namespace JumpingNinja
             Text buttonText = CreateText("Label", gameObject.transform, label, 46, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
             Stretch(buttonText.rectTransform);
             return button;
+        }
+
+        public static void Select(Selectable selectable)
+        {
+            if (selectable == null || EventSystem.current == null)
+            {
+                return;
+            }
+
+            EventSystem.current.SetSelectedGameObject(null);
+            EventSystem.current.SetSelectedGameObject(selectable.gameObject);
         }
 
         public static InputField CreateInputField(string name, Transform parent, string placeholder)
@@ -154,6 +197,37 @@ namespace JumpingNinja
             Shadow shadow = graphic.gameObject.AddComponent<Shadow>();
             shadow.effectColor = color;
             shadow.effectDistance = distance;
+        }
+    }
+
+    internal sealed class PortraitCanvasRoot : MonoBehaviour
+    {
+        public RectTransform Content { get; set; }
+    }
+
+    internal sealed class ButtonSelectionIndicator : MonoBehaviour, ISelectHandler, IDeselectHandler
+    {
+        private Outline outline;
+
+        public void Initialize(Outline selectionOutline)
+        {
+            outline = selectionOutline;
+        }
+
+        public void OnSelect(BaseEventData eventData)
+        {
+            if (outline != null)
+            {
+                outline.enabled = true;
+            }
+        }
+
+        public void OnDeselect(BaseEventData eventData)
+        {
+            if (outline != null)
+            {
+                outline.enabled = false;
+            }
         }
     }
 }

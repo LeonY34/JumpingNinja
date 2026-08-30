@@ -4,11 +4,11 @@
 
 ## 当前版本
 
-- 游戏版本：v1.0.4
+- 游戏版本：v1.0.5
 - 最近更新：2026-08-30
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android、Windows x64
-- 状态：v1.0.4 已提供 Android APK 与 Windows x64 ZIP，并发布到 GitHub Release
+- 状态：v1.0.5 功能已完成，等待 Android APK 与 Windows x64 ZIP 构建发布
 
 ## V1 已实现功能
 
@@ -16,6 +16,7 @@
 - 首次运行要求创建本地 Ninja 用户，仅需用户名。
 - 本地用户表、当前用户和最高分使用 `PlayerPrefs` 保存，存储键为 `JumpingNinja.Users.v1`。
 - 主菜单包含开始游戏、排行榜和切换用户。
+- 主菜单、排行榜、切换用户、暂停与结算画面会自动选中常用按钮；方向键可移动选择，Enter 可触发选中按钮，并保留鼠标点击和手机触控。
 - 排行榜按最高分降序显示；切换用户页支持创建新用户。
 - Ninja 视觉保持 1×1 红色方形忍者头像，物理碰撞箱默认缩为视觉范围的 82%，始终受 2D 重力影响。
 - 每次向左或向右跳跃时，忍者头像会播放压缩、拉伸、位移和方向倾斜动画；动画只影响视觉子对象，不改变碰撞体。
@@ -44,6 +45,7 @@
 - `Assets/Scripts/GameApp.cs`：加载页、用户创建、主菜单、排行榜、切换用户和游戏流程切换。
 - `Assets/Scripts/UserRepository.cs`：本地用户表和最高分持久化。
 - `Assets/Scripts/RuntimeUi.cs`：运行时 uGUI 创建工具与统一视觉样式。
+- `Assets/Scripts/PortraitViewport.cs`：Windows 可缩放窗口下的 9:16 相机视口与黑边适配。
 - `Assets/Scripts/JumpingNinjaConfig.cs`：Inspector 可调参数定义。
 - `Assets/Scripts/Gameplay/GameController.cs`：单局状态、HUD、计分、纪录提示、暂停和结算。
 - `Assets/Scripts/Gameplay/NinjaController.cs`：Ninja 物理、左右转向和碰撞规则。
@@ -79,17 +81,18 @@
 - Scripting Backend：IL2CPP
 - Product Name：Jumping Ninja
 - Company Name：Potatoed Mice
-- Version Name：1.0.4
-- Android Version Code：4
+- Version Name：1.0.5
+- Android Version Code：5
 
 ## Windows 设置
 
 - 架构：x64
-- 显示模式：540×960 固定竖屏窗口
+- 显示模式：默认 540×960 的可缩放窗口；游戏内容始终保持 9:16，多余区域以黑色补齐
 - 分发格式：包含完整 Player 文件的 ZIP
 
 ## 验证记录
 
+- 2026-08-30 v1.0.5 使用 Unity `6000.5.9f1` 完成脚本编译与 `V1ProjectSetup.ValidateV1` 校验，日志包含 `JUMPING_NINJA_V1_VALIDATION_OK`，无 C# 编译错误；双平台产物尚待发布脚本构建。
 - 2026-08-24 Windows 环境检查：仓库唯一的 Git LFS 文件 `Assets/Logos/logo.png` 已完整下载，工作区文件和本地 LFS 对象的 SHA-256 均与指针 OID 一致。
 - 已确认项目要求和本机编辑器均为 Unity `6000.5.9f1`；编辑器位于 `G:/Unity/Editor/6000.5.9f1/Editor/Unity.exe`，Unity CLI `1.0.0-beta.5` 可执行。
 - 受限命令行环境无法写入 Hub 数据库和 Unity 用户缓存；使用 `--editor-path` 可启动正确版本，但不能用该环境的认证/Hub 状态代表开发者桌面会话。
@@ -129,4 +132,4 @@
 - 用户及排行榜完全保存在本机，不包含联网账户或云排行榜。
 - 当前 Build Settings 仍使用 `Assets/Scenes/SampleScene.unity`；游戏内容由运行时 Bootstrap 构建。
 - 切换用户页面当前显示排行榜前 8 个用户，足够 V1 使用；用户规模扩大时应改为滚动列表。
-- 当前 v1.0.4 APK 使用 Android Debug 证书签名，Windows EXE 未进行代码签名；后续若作为正式长期分发版本，应配置并妥善保存 Android keystore，并考虑为 Windows 程序配置代码签名证书。
+- 当前 v1.0.5 APK 使用 Android Debug 证书签名，Windows EXE 未进行代码签名；后续若作为正式长期分发版本，应配置并妥善保存 Android keystore，并考虑为 Windows 程序配置代码签名证书。

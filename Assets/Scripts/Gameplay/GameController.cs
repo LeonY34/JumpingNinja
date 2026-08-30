@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -25,6 +26,8 @@ namespace JumpingNinja
         private WorldGenerator world;
         private NinjaController ninja;
         private Canvas gameCanvas;
+        private Transform gameContent;
+        private Button pauseButton;
         private Text scoreText;
         private Text nextTargetText;
         private GameObject pauseOverlay;
@@ -126,7 +129,7 @@ namespace JumpingNinja
 
         public void PresentGameOver(int score, bool isPersonalBest)
         {
-            Image overlay = RuntimeUi.CreateImage("Game Over", gameCanvas.transform, new Color(RuntimeUi.Ink.r, RuntimeUi.Ink.g, RuntimeUi.Ink.b, 0.96f));
+            Image overlay = RuntimeUi.CreateImage("Game Over", gameContent, new Color(RuntimeUi.Ink.r, RuntimeUi.Ink.g, RuntimeUi.Ink.b, 0.96f));
             RuntimeUi.Stretch(overlay.rectTransform);
 
             Text heading = RuntimeUi.CreateText("Heading", overlay.transform, "RUN OVER", 92, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
@@ -144,6 +147,7 @@ namespace JumpingNinja
 
             Button menu = RuntimeUi.CreateButton("Menu", overlay.transform, "MAIN MENU", app.ReturnToMenu, RuntimeUi.Muted);
             RuntimeUi.Place(menu.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(760f, 125f), new Vector2(0f, -390f));
+            RuntimeUi.Select(retry);
         }
 
         private void CreateWorld()
@@ -177,6 +181,7 @@ namespace JumpingNinja
             cameraComponent.farClipPlane = 100f;
             cameraComponent.allowHDR = false;
             cameraComponent.allowMSAA = false;
+            cameraObject.AddComponent<PortraitViewport>();
 
             CameraFollower follower = cameraObject.AddComponent<CameraFollower>();
             follower.Initialize(cameraComponent, ninja.transform, config);
@@ -186,11 +191,12 @@ namespace JumpingNinja
         {
             gameCanvas = RuntimeUi.CreateCanvas("Game HUD", 10);
             gameCanvas.transform.SetParent(transform, false);
+            gameContent = RuntimeUi.Content(gameCanvas);
 
             CreateInputZone("Left Input", new Vector2(0f, 0f), new Vector2(0.5f, 1f), () => ninja.Steer(false));
             CreateInputZone("Right Input", new Vector2(0.5f, 0f), new Vector2(1f, 1f), () => ninja.Steer(true));
 
-            Image scorePanel = RuntimeUi.CreateImage("Score Panel", gameCanvas.transform, new Color(0.04f, 0.05f, 0.07f, 0.82f));
+            Image scorePanel = RuntimeUi.CreateImage("Score Panel", gameContent, new Color(0.04f, 0.05f, 0.07f, 0.82f));
             scorePanel.raycastTarget = false;
             RuntimeUi.Place(scorePanel.rectTransform, new Vector2(0f, 1f), new Vector2(570f, 190f), new Vector2(315f, -135f));
 
@@ -206,29 +212,30 @@ namespace JumpingNinja
             nextTargetText.rectTransform.offsetMin = new Vector2(34f, 5f);
             nextTargetText.rectTransform.offsetMax = new Vector2(-20f, 0f);
 
-            Button pauseButton = RuntimeUi.CreateButton("Pause", gameCanvas.transform, "II", Pause, RuntimeUi.Red);
+            pauseButton = RuntimeUi.CreateButton("Pause", gameContent, "II", Pause, RuntimeUi.Red);
             RuntimeUi.Place(pauseButton.GetComponent<RectTransform>(), new Vector2(1f, 1f), new Vector2(130f, 130f), new Vector2(-95f, -105f));
 
-            Text leftHint = RuntimeUi.CreateText("Left Hint", gameCanvas.transform, "<  TAP", 32, TextAnchor.MiddleLeft, new Color(1f, 1f, 1f, 0.6f), FontStyle.Bold);
+            Text leftHint = RuntimeUi.CreateText("Left Hint", gameContent, "<  TAP", 32, TextAnchor.MiddleLeft, new Color(1f, 1f, 1f, 0.6f), FontStyle.Bold);
             RuntimeUi.Place(leftHint.rectTransform, new Vector2(0f, 0f), new Vector2(350f, 80f), new Vector2(205f, 90f));
 
-            Text rightHint = RuntimeUi.CreateText("Right Hint", gameCanvas.transform, "TAP  >", 32, TextAnchor.MiddleRight, new Color(1f, 1f, 1f, 0.6f), FontStyle.Bold);
+            Text rightHint = RuntimeUi.CreateText("Right Hint", gameContent, "TAP  >", 32, TextAnchor.MiddleRight, new Color(1f, 1f, 1f, 0.6f), FontStyle.Bold);
             RuntimeUi.Place(rightHint.rectTransform, new Vector2(1f, 0f), new Vector2(350f, 80f), new Vector2(-205f, 90f));
+            RuntimeUi.Select(pauseButton);
         }
 
         private void CreateInputZone(string name, Vector2 anchorMin, Vector2 anchorMax, UnityEngine.Events.UnityAction onClick)
         {
-            Image image = RuntimeUi.CreateImage(name, gameCanvas.transform, Color.clear);
+            Image image = RuntimeUi.CreateImage(name, gameContent, Color.clear);
             image.raycastTarget = true;
             RectTransform rect = image.rectTransform;
             rect.anchorMin = anchorMin;
             rect.anchorMax = anchorMax;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
-            Button button = image.gameObject.AddComponent<Button>();
-            button.targetGraphic = image;
-            button.transition = Selectable.Transition.None;
-            button.onClick.AddListener(onClick);
+            EventTrigger trigger = image.gameObject.AddComponent<EventTrigger>();
+            EventTrigger.Entry click = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
+            click.callback.AddListener(_ => onClick?.Invoke());
+            trigger.triggers.Add(click);
         }
 
         private void CaptureRecordTargets()
@@ -287,7 +294,7 @@ namespace JumpingNinja
 
             paused = true;
             Time.timeScale = 0f;
-            Image overlay = RuntimeUi.CreateImage("Pause Overlay", gameCanvas.transform, new Color(RuntimeUi.Ink.r, RuntimeUi.Ink.g, RuntimeUi.Ink.b, 0.94f));
+            Image overlay = RuntimeUi.CreateImage("Pause Overlay", gameContent, new Color(RuntimeUi.Ink.r, RuntimeUi.Ink.g, RuntimeUi.Ink.b, 0.94f));
             RuntimeUi.Stretch(overlay.rectTransform);
             pauseOverlay = overlay.gameObject;
 
@@ -299,6 +306,7 @@ namespace JumpingNinja
 
             Button menu = RuntimeUi.CreateButton("Menu", overlay.transform, "MAIN MENU", app.ReturnToMenu, RuntimeUi.Muted);
             RuntimeUi.Place(menu.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(760f, 125f), new Vector2(0f, -180f));
+            RuntimeUi.Select(resume);
         }
 
         private void BeginResumeCountdown()
@@ -320,7 +328,7 @@ namespace JumpingNinja
 
         private IEnumerator ResumeCountdown()
         {
-            Image veil = RuntimeUi.CreateImage("Resume Countdown", gameCanvas.transform, new Color(0f, 0f, 0f, 0.5f));
+            Image veil = RuntimeUi.CreateImage("Resume Countdown", gameContent, new Color(0f, 0f, 0f, 0.5f));
             RuntimeUi.Stretch(veil.rectTransform);
             Text countdown = RuntimeUi.CreateText("Countdown", veil.transform, "3", 190, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
             RuntimeUi.Stretch(countdown.rectTransform);
@@ -337,11 +345,12 @@ namespace JumpingNinja
             paused = false;
             countingDown = false;
             Time.timeScale = 1f;
+            RuntimeUi.Select(pauseButton);
         }
 
         private IEnumerator ShowOpeningHint()
         {
-            Image card = RuntimeUi.CreateImage("Opening Hint", gameCanvas.transform, new Color(0.04f, 0.05f, 0.07f, 0.78f));
+            Image card = RuntimeUi.CreateImage("Opening Hint", gameContent, new Color(0.04f, 0.05f, 0.07f, 0.78f));
             card.raycastTarget = false;
             RuntimeUi.Place(card.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(820f, 210f), new Vector2(0f, -390f));
             Text message = RuntimeUi.CreateText("Message", card.transform, "TAP LEFT OR RIGHT\nTO JUMP", 44, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
@@ -364,7 +373,7 @@ namespace JumpingNinja
             while (notificationQueue.Count > 0)
             {
                 string message = notificationQueue.Dequeue();
-                Image card = RuntimeUi.CreateImage("Record Notification", gameCanvas.transform, RuntimeUi.Red);
+                Image card = RuntimeUi.CreateImage("Record Notification", gameContent, RuntimeUi.Red);
                 card.raycastTarget = false;
                 RuntimeUi.Place(card.rectTransform, new Vector2(0.5f, 1f), new Vector2(760f, 110f), new Vector2(0f, -270f));
                 Text label = RuntimeUi.CreateText("Label", card.transform, message, 36, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);

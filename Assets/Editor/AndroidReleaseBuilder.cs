@@ -9,16 +9,16 @@ namespace JumpingNinjaEditor
 {
     public static class AndroidReleaseBuilder
     {
-        private const string DefaultOutputPath = "Builds/JumpingNinja-v1.0.4.apk";
+        private const string DefaultOutputPath = "Builds/JumpingNinja-v1.0.5.apk";
 
         public static void BuildApk()
         {
             string outputPath = GetArgumentValue("-androidOutputPath") ?? DefaultOutputPath;
             outputPath = Path.GetFullPath(outputPath);
 
-            if (PlayerSettings.bundleVersion != "1.0.4" || PlayerSettings.Android.bundleVersionCode != 4)
+            if (PlayerSettings.bundleVersion != "1.0.5" || PlayerSettings.Android.bundleVersionCode != 5)
             {
-                throw new InvalidOperationException("Android release version must be v1.0.4 (version code 4).");
+                throw new InvalidOperationException("Android release version must be v1.0.5 (version code 5).");
             }
 
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android &&
