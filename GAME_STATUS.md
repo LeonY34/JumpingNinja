@@ -8,7 +8,7 @@
 - 最近更新：2026-08-30
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android、Windows x64
-- 状态：v1.0.5 功能已完成，等待 Android APK 与 Windows x64 ZIP 构建发布
+- 状态：v1.0.5 已提供 Android APK 与 Windows x64 ZIP，并发布到 GitHub Release
 
 ## V1 已实现功能
 
@@ -92,7 +92,10 @@
 
 ## 验证记录
 
-- 2026-08-30 v1.0.5 使用 Unity `6000.5.9f1` 完成脚本编译与 `V1ProjectSetup.ValidateV1` 校验，日志包含 `JUMPING_NINJA_V1_VALIDATION_OK`，无 C# 编译错误；双平台产物尚待发布脚本构建。
+- 2026-08-30 v1.0.5 使用 Unity `6000.5.9f1` 完成脚本编译与 `V1ProjectSetup.ValidateV1` 校验，日志包含 `JUMPING_NINJA_V1_VALIDATION_OK`，无 C# 编译错误；Android 与 StandaloneWindows64 构建均成功。
+- `Builds/JumpingNinja-v1.0.5.apk` 大小为 39,438,533 字节，SHA-256 为 `9449BE93740B073E86CB33A5B665F873FDC981D99490B38ACDF9026A30EF7EA9`；包名、Version Name、Version Code、最低/目标 API 分别为 `com.potatoedmice.jumpingninja`、`1.0.5`、`5`、`26`/`36`，APK Signature Scheme v2 验证通过，证书仍为 Android Debug。
+- `JumpingNinja-v1.0.5-Windows.zip` 已排除 Unity 的 `BurstDebugInformation_DoNotShip` 目录，大小为 43,903,184 字节，SHA-256 为 `61086137779122A926E603C0191FAD193AD2DE106D6C7627C4D55B82B9A9779A`；ZIP 包含 EXE、Data、Mono 运行时及所需 DLL，EXE 未进行代码签名。
+- v1.0.5 已发布至 `https://github.com/LeonY34/JumpingNinja/releases/tag/v1.0.5`，Android 与 Windows 两个远端资源状态均为 `uploaded`；本次执行 Unity 编译、配置校验、双平台构建与静态产物检查，未执行手机安装、真机玩法或 Windows GUI 玩法测试。
 - 2026-08-24 Windows 环境检查：仓库唯一的 Git LFS 文件 `Assets/Logos/logo.png` 已完整下载，工作区文件和本地 LFS 对象的 SHA-256 均与指针 OID 一致。
 - 已确认项目要求和本机编辑器均为 Unity `6000.5.9f1`；编辑器位于 `G:/Unity/Editor/6000.5.9f1/Editor/Unity.exe`，Unity CLI `1.0.0-beta.5` 可执行。
 - 受限命令行环境无法写入 Hub 数据库和 Unity 用户缓存；使用 `--editor-path` 可启动正确版本，但不能用该环境的认证/Hub 状态代表开发者桌面会话。
