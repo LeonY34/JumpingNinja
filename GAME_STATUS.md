@@ -5,10 +5,10 @@
 ## 当前版本
 
 - 游戏版本：v1.0.6
-- 最近更新：2026-09-03
+- 最近更新：2026-09-04
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android、Windows x64
-- 状态：在线认证与联网排行榜已合并；v1.0.6 已完成安全审计与发布准备，等待双平台构建和 GitHub Release
+- 状态：在线认证与联网排行榜已合并；v1.0.6 已完成安全审计、双平台构建并发布到 GitHub Release
 
 ## 在线认证与联网排行榜实施版（VPS 已部署）
 
@@ -134,6 +134,10 @@
 
 ## 验证记录
 
+- 2026-09-03 v1.0.6 使用 Unity `6000.5.9f1` 完成脚本编译、`V1ProjectSetup.ValidateV1` 配置校验和 EditMode 测试，日志包含 `JUMPING_NINJA_V1_VALIDATION_OK`，测试 7/7 通过；Android 与 StandaloneWindows64 构建均成功。
+- `Builds/JumpingNinja-v1.0.6.apk` 大小为 39,544,261 字节，SHA-256 为 `ECECA194897A0CD5DD3EF707FC4F8FBA3F0E83992D3672D2A874FAA42E208213`；包名、Version Name、Version Code、最低/目标 API 和原生架构分别为 `com.potatoedmice.jumpingninja`、`1.0.6`、`6`、`26`/`36`、`arm64-v8a`。APK Signature Scheme v2 验证通过，证书为 Android Debug。
+- `Builds/JumpingNinja-v1.0.6-Windows.zip` 大小为 43,927,507 字节，SHA-256 为 `1BC0C8CFFF8518D688704E9EF61865BEE37FEC7B883CAAC9E91E2CD614251428`；ZIP 已排除 `BurstDebugInformation_DoNotShip`，包含 EXE、Data、Mono 运行时及所需 DLL，EXE 未进行代码签名。
+- v1.0.6 已发布至 `https://github.com/LeonY34/JumpingNinja/releases/tag/v1.0.6`；公开 GitHub API 核验 Release 非草稿、非预发布，Android 与 Windows 两个远端资源状态均为 `uploaded`，远端大小和 SHA-256 与本地一致。本次未执行手机安装、真机玩法或 Windows GUI 玩法测试。
 - 2026-09-03 v1.0.6 发布前安全检查：当前 Git 历史与跟踪文件未发现真实 `.env`、私钥、keystore 或 GitHub token；客户端 JWT 仅保存在内存，不写入 `PlayerPrefs`。公网 `/health` 返回 200 且数据库为 `ok`，TLS 证书有效期至 2026-11-30，HSTS 已启用。
 - 使用微软官方 .NET SDK `10.0.400`（SHA-512 校验通过）重新构建并测试后端，27/27 测试通过；NuGet 直接与传递依赖的已知漏洞扫描结果为 0。ASP.NET Core / EF Core 已更新到 `10.0.11`，Npgsql 更新到 `10.0.3`，测试运行器更新到 `3.1.5`。
 - 仓库中的生产容器配置已固定到 .NET SDK `10.0.400` / Runtime `10.0.11` 并切换为非 root 用户；Nginx 模板补充隐藏版本、`nosniff`、无 Referrer 和 `no-store`。这些服务器配置修改尚未部署到 VPS，当前线上服务仍为上一部署版本。
