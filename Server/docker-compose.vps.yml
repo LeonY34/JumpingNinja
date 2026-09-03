@@ -1,0 +1,51 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - jumping_ninja_postgres:/var/lib/postgresql/data
+    networks:
+      - auth
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      ReverseProxy__KnownProxies__0: ${JUMPING_NINJA_NETWORK_GATEWAY:-172.30.50.1}
+    ports:
+      - "127.0.0.1:15050:8080"
+    volumes:
+      - jumping_ninja_dataprotection:/root/.aspnet/DataProtection-Keys
+    networks:
+      - auth
+    depends_on:
+      db:
+        condition: service_healthy
+
+networks:
+  auth:
+    name: jumping-ninja-auth-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${JUMPING_NINJA_NETWORK_SUBNET:-172.30.50.0/24}
+          gateway: ${JUMPING_NINJA_NETWORK_GATEWAY:-172.30.50.1}
+
+volumes:
+  jumping_ninja_postgres:
+  jumping_ninja_dataprotection:

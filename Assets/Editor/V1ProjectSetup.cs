@@ -78,6 +78,13 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException("The V1 map and camera configuration is invalid.");
             }
 
+            if (!System.Uri.TryCreate(config.authApiBaseUrl, System.UriKind.Absolute, out System.Uri authApiUri) ||
+                (authApiUri.Scheme != System.Uri.UriSchemeHttp && authApiUri.Scheme != System.Uri.UriSchemeHttps) ||
+                config.authRequestTimeoutSeconds < 1)
+            {
+                throw new System.InvalidOperationException("The online authentication API URL or request timeout is invalid.");
+            }
+
             if (config.SafeMapWidth != 15 || config.SafeCameraWidth != 9f || config.SafeLayerHeight != 9 ||
                 config.visualThemeLayerInterval != 10 || config.backgroundThemeColors == null ||
                 config.backgroundThemeColors.Length == 0 || config.hazardThemeTints == null ||
@@ -185,6 +192,8 @@ namespace JumpingNinjaEditor
             config.playerStartY = 4.5f;
             config.playerColliderScale = 0.82f;
             config.visualThemeLayerInterval = 10;
+            config.authApiBaseUrl = "https://jumpingninja.dukechen.top:9443";
+            config.authRequestTimeoutSeconds = 10;
             EditorUtility.SetDirty(config);
         }
     }

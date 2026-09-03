@@ -1,0 +1,7 @@
+**/bin/
+**/obj/
+.env
+.env.*
+JumpingNinja.Tests/
+README.md
+verify-auth.ps1

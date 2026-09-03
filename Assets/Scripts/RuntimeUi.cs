@@ -167,6 +167,87 @@ namespace JumpingNinja
             return input;
         }
 
+        public static InputField CreatePasswordField(string name, Transform parent, string placeholder)
+        {
+            InputField input = CreateInputField(name, parent, placeholder);
+            input.characterLimit = 72;
+            input.contentType = InputField.ContentType.Password;
+            return input;
+        }
+
+        public static ScrollRect CreateScrollView(
+            string name,
+            Transform parent,
+            Vector2 size,
+            Vector2 position,
+            out Transform content)
+        {
+            GameObject scrollObject = new GameObject(
+                name,
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(ScrollRect));
+            scrollObject.transform.SetParent(parent, false);
+            ScrollRect scroll = scrollObject.GetComponent<ScrollRect>();
+            scroll.horizontal = false;
+            scroll.vertical = true;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 45f;
+
+            Image background = scrollObject.GetComponent<Image>();
+            background.color = new Color(1f, 1f, 1f, 0.06f);
+            background.raycastTarget = true;
+
+            GameObject viewportObject = new GameObject(
+                "Viewport",
+                typeof(RectTransform),
+                typeof(RectMask2D));
+            viewportObject.transform.SetParent(scrollObject.transform, false);
+            RectTransform viewport = viewportObject.GetComponent<RectTransform>();
+            Stretch(viewport);
+            scroll.viewport = viewport;
+
+            GameObject contentObject = new GameObject(
+                "Content",
+                typeof(RectTransform),
+                typeof(VerticalLayoutGroup),
+                typeof(ContentSizeFitter));
+            contentObject.transform.SetParent(viewportObject.transform, false);
+            RectTransform contentRect = contentObject.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0f, 1f);
+            contentRect.anchorMax = new Vector2(1f, 1f);
+            contentRect.pivot = new Vector2(0.5f, 1f);
+            contentRect.anchoredPosition = Vector2.zero;
+            contentRect.sizeDelta = new Vector2(0f, 0f);
+
+            VerticalLayoutGroup layout = contentObject.GetComponent<VerticalLayoutGroup>();
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = false;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+            layout.spacing = 14f;
+            layout.padding = new RectOffset(12, 12, 16, 16);
+
+            ContentSizeFitter fitter = contentObject.GetComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            scroll.content = contentRect;
+            scroll.verticalNormalizedPosition = 1f;
+            Place(scrollObject.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), size, position);
+            content = contentObject.transform;
+            return scroll;
+        }
+
+        public static void AddLayoutHeight(GameObject gameObject, float preferredHeight)
+        {
+            LayoutElement layout = gameObject.GetComponent<LayoutElement>()
+                ?? gameObject.AddComponent<LayoutElement>();
+            layout.preferredHeight = preferredHeight;
+            layout.minHeight = preferredHeight;
+        }
+
         public static void Place(RectTransform rect, Vector2 anchor, Vector2 size, Vector2 position)
         {
             rect.anchorMin = anchor;

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
@@ -11,9 +12,9 @@ namespace JumpingNinja
     {
         private sealed class RecordTarget
         {
-            public string id;
             public string name;
             public int score;
+            public int accountCount;
         }
 
         private readonly List<RecordTarget> recordTargets = new List<RecordTarget>();
@@ -22,7 +23,8 @@ namespace JumpingNinja
 
         private GameApp app;
         private JumpingNinjaConfig config;
-        private UserRepository users;
+        private OnlineNinjaRepository ninjas;
+        private LeaderboardTargetsPayload onlineTargets;
         private WorldGenerator world;
         private NinjaController ninja;
         private Canvas gameCanvas;
@@ -30,22 +32,31 @@ namespace JumpingNinja
         private Button pauseButton;
         private Text scoreText;
         private Text nextTargetText;
+        private Text scoreSyncText;
         private GameObject pauseOverlay;
         private Coroutine notificationRoutine;
         private int highestLevel;
         private int initialPersonalBest;
+        private int initialAccountBest;
         private bool personalBestAnnounced;
+        private bool accountBestAnnounced;
+        private int lastTargetPrefetchScore = -1;
         private bool paused;
         private bool countingDown;
         private bool dead;
 
         public bool AcceptsInput => !paused && !countingDown && !dead;
 
-        public void Initialize(GameApp owner, JumpingNinjaConfig gameConfig, UserRepository userRepository)
+        internal void Initialize(
+            GameApp owner,
+            JumpingNinjaConfig gameConfig,
+            OnlineNinjaRepository ninjaRepository,
+            LeaderboardTargetsPayload targetSnapshot)
         {
             app = owner;
             config = gameConfig;
-            users = userRepository;
+            ninjas = ninjaRepository;
+            onlineTargets = targetSnapshot;
             Time.timeScale = 1f;
 
             CaptureRecordTargets();
@@ -81,7 +92,37 @@ namespace JumpingNinja
                 world.EnsureGeneratedThrough(highestLevel + config.generateAheadLayers);
                 CheckRecords(previous, highestLevel);
                 UpdateScoreDisplay();
+                RequestMoreTargetsIfNeeded();
             }
+        }
+
+        internal void MergeOnlineTargets(LeaderboardTargetsPayload targetSnapshot)
+        {
+            LeaderboardTargetPayload[] targets = targetSnapshot?.targets ?? System.Array.Empty<LeaderboardTargetPayload>();
+            foreach (LeaderboardTargetPayload target in targets)
+            {
+                if (target == null || target.score <= highestLevel)
+                {
+                    continue;
+                }
+
+                bool alreadyKnown = recordTargets.Exists(
+                    known => known.score == target.score &&
+                            string.Equals(known.name, target.username, System.StringComparison.OrdinalIgnoreCase));
+                if (!alreadyKnown)
+                {
+                    recordTargets.Add(new RecordTarget
+                    {
+                        name = target.username,
+                        score = target.score,
+                        accountCount = target.accountCount
+                    });
+                }
+            }
+
+            recordTargets.Sort((left, right) => left.score.CompareTo(right.score));
+            UpdateScoreDisplay();
+            RequestMoreTargetsIfNeeded();
         }
 
         private void HandleKeyboardInput()
@@ -127,7 +168,7 @@ namespace JumpingNinja
             app.FinishRun(highestLevel);
         }
 
-        public void PresentGameOver(int score, bool isPersonalBest)
+        public void PresentGameOver(int score, bool isPersonalBest, bool isAccountBest)
         {
             Image overlay = RuntimeUi.CreateImage("Game Over", gameContent, new Color(RuntimeUi.Ink.r, RuntimeUi.Ink.g, RuntimeUi.Ink.b, 0.96f));
             RuntimeUi.Stretch(overlay.rectTransform);
@@ -138,9 +179,16 @@ namespace JumpingNinja
             Text result = RuntimeUi.CreateText("Result", overlay.transform, $"LEVEL {score}", 116, TextAnchor.MiddleCenter, RuntimeUi.Red, FontStyle.Bold);
             RuntimeUi.Place(result.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900f, 180f), new Vector2(0f, 150f));
 
-            string subline = isPersonalBest ? "NEW PERSONAL BEST" : $"BEST  {users.ActiveUser.bestScore}";
+            string subline = isAccountBest
+                ? "NEW ACCOUNT BEST"
+                : isPersonalBest
+                    ? "NEW NINJA BEST"
+                    : $"NINJA BEST  {ninjas.ActiveNinja?.bestScore ?? 0}";
             Text best = RuntimeUi.CreateText("Best", overlay.transform, subline, 40, TextAnchor.MiddleCenter, Color.white, FontStyle.Bold);
             RuntimeUi.Place(best.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900f, 100f), new Vector2(0f, 5f));
+
+            scoreSyncText = RuntimeUi.CreateText("Score Sync", overlay.transform, "SYNCING...", 28, TextAnchor.MiddleCenter, RuntimeUi.Muted, FontStyle.Bold);
+            RuntimeUi.Place(scoreSyncText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(900f, 70f), new Vector2(0f, -95f));
 
             Button retry = RuntimeUi.CreateButton("Retry", overlay.transform, "RETRY", app.RetryRun, RuntimeUi.Red);
             RuntimeUi.Place(retry.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(760f, 140f), new Vector2(0f, -220f));
@@ -148,6 +196,14 @@ namespace JumpingNinja
             Button menu = RuntimeUi.CreateButton("Menu", overlay.transform, "MAIN MENU", app.ReturnToMenu, RuntimeUi.Muted);
             RuntimeUi.Place(menu.GetComponent<RectTransform>(), new Vector2(0.5f, 0.5f), new Vector2(760f, 125f), new Vector2(0f, -390f));
             RuntimeUi.Select(retry);
+        }
+
+        public void SetScoreSyncState(string message)
+        {
+            if (scoreSyncText != null)
+            {
+                scoreSyncText.text = message ?? string.Empty;
+            }
         }
 
         private void CreateWorld()
@@ -240,20 +296,22 @@ namespace JumpingNinja
 
         private void CaptureRecordTargets()
         {
-            UserProfile active = users.ActiveUser;
+            OnlineNinjaProfile active = ninjas.ActiveNinja;
             initialPersonalBest = active?.bestScore ?? 0;
-            foreach (UserProfile profile in users.Users)
+            initialAccountBest = ninjas.AccountBestScore;
+            LeaderboardTargetPayload[] targets = onlineTargets?.targets ?? System.Array.Empty<LeaderboardTargetPayload>();
+            foreach (LeaderboardTargetPayload target in targets)
             {
-                if (profile.id == active?.id)
+                if (target == null)
                 {
                     continue;
                 }
 
                 recordTargets.Add(new RecordTarget
                 {
-                    id = profile.id,
-                    name = profile.name,
-                    score = profile.bestScore
+                    name = target.username,
+                    score = target.score,
+                    accountCount = target.accountCount
                 });
             }
         }
@@ -263,15 +321,24 @@ namespace JumpingNinja
             if (!personalBestAnnounced && previousScore <= initialPersonalBest && newScore > initialPersonalBest)
             {
                 personalBestAnnounced = true;
-                QueueNotification("NEW PERSONAL BEST!");
+                QueueNotification("NEW NINJA BEST!");
+            }
+
+            if (!accountBestAnnounced && previousScore <= initialAccountBest && newScore > initialAccountBest)
+            {
+                accountBestAnnounced = true;
+                QueueNotification("NEW ACCOUNT BEST!");
             }
 
             foreach (RecordTarget target in recordTargets)
             {
-                if (!announcedTargets.Contains(target.id) && previousScore <= target.score && newScore > target.score)
+                string targetKey = target.score + ":" + target.name;
+                if (!announcedTargets.Contains(targetKey) && previousScore <= target.score && newScore > target.score)
                 {
-                    announcedTargets.Add(target.id);
-                    QueueNotification($"PASSED {target.name.ToUpperInvariant()}!");
+                    announcedTargets.Add(targetKey);
+                    QueueNotification(target.accountCount > 1
+                        ? $"PASSED {target.name.ToUpperInvariant()} +{target.accountCount - 1}!"
+                        : $"PASSED {target.name.ToUpperInvariant()}!");
                 }
             }
         }
@@ -279,10 +346,32 @@ namespace JumpingNinja
         private void UpdateScoreDisplay()
         {
             scoreText.text = $"LEVEL {highestLevel}";
-            UserProfile nextTarget = users.GetNextTarget(highestLevel);
+            if (highestLevel <= initialPersonalBest)
+            {
+                nextTargetText.text = $"NINJA BEST  {initialPersonalBest}";
+                return;
+            }
+
+            if (highestLevel <= initialAccountBest)
+            {
+                nextTargetText.text = $"ACCOUNT BEST  {initialAccountBest}";
+                return;
+            }
+
+            RecordTarget nextTarget = recordTargets.Find(target => target.score >= highestLevel);
             nextTargetText.text = nextTarget == null
                 ? "TOP OF THE BOARD"
-                : $"NEXT  {nextTarget.name.ToUpperInvariant()}  {nextTarget.bestScore}";
+                : $"NEXT  {nextTarget.name.ToUpperInvariant()}  {nextTarget.score}";
+        }
+
+        private void RequestMoreTargetsIfNeeded()
+        {
+            int remaining = recordTargets.Count(target => target.score > highestLevel);
+            if (remaining <= 3 && highestLevel > lastTargetPrefetchScore)
+            {
+                lastTargetPrefetchScore = highestLevel;
+                app.RequestOnlineTargets(highestLevel);
+            }
         }
 
         private void Pause()

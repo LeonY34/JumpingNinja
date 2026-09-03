@@ -54,3 +54,5 @@ MonoBehaviour:
   ninjaColor: {r: 0.88, g: 0.18, b: 0.14, a: 1}
   wallColor: {r: 1, g: 1, b: 1, a: 1}
   hazardColor: {r: 0.025, g: 0.03, b: 0.04, a: 1}
+  authApiBaseUrl: https://jumpingninja.dukechen.top:9443
+  authRequestTimeoutSeconds: 10

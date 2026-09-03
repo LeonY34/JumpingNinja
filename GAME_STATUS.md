@@ -5,10 +5,35 @@
 ## 当前版本
 
 - 游戏版本：v1.0.5
-- 最近更新：2026-08-30
+- 最近更新：2026-09-03
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android、Windows x64
-- 状态：v1.0.5 已提供 Android APK 与 Windows x64 ZIP，并发布到 GitHub Release
+- 状态：在线认证与联网排行榜实施版已部署到 VPS；旧 Ninja 导入兼容修复已完成公网烟测，最新 Windows x64 可执行文件和 ZIP 已导出并已本地 commit，尚未 push/tag/release
+
+## 在线认证与联网排行榜实施版（VPS 已部署）
+
+- 2026-09-01 已将 ASP.NET Core 10 API 与 PostgreSQL 部署到 VPS 的 `/opt/jumping-ninja-auth`；公网地址为 `https://jumpingninja.dukechen.top:9443`，HTTP 80 会跳转到该 HTTPS 地址。VPS 原有占用 443 的服务未改动。
+- 本机 Compose 已按计划关停，未删除本地 PostgreSQL 卷；VPS 使用独立的空数据库卷，数据库只加入认证专用 Docker 网络，API 只发布到 VPS 回环地址 `127.0.0.1:15050`。
+- API 提供注册、登录、`/me`、云端 Ninja、旧档导入、单 Ninja 最高分、账号聚合排行榜和在线目标；用户名全局唯一且忽略大小写，密码使用 ASP.NET Core Identity 哈希，JWT 签名密钥只来自被 Git 忽略的环境文件。
+- 注册和登录按来源 IP 分别限流，Nginx 转发的真实 IP 只对认证专用代理来源生效；Ninja 写入、成绩提交和在线读取按 JWT 账号分桶限流。密码、原始令牌、签名密钥和请求密码均不写入日志。PostgreSQL 使用命名卷保存账户、Ninja、聚合榜和旧档映射。
+- Unity 加载页之后进入在线登录页；注册成功自动登录并立即调用 `/me` 校验。令牌只保存在内存，主动登出、令牌过期、程序关闭重开或收到未授权响应后必须重新登录。
+- `OnlineNinjaRepository` 按在线账号隔离云端快照、本地缓存、当前 Ninja 和待同步最高分；JWT、密码和令牌过期时间只在内存中保存。旧 `JumpingNinja.Users.v1` 仅作为可选导入源，不会误并入另一个账号。
+- 后端 `dotnet test`：26/26 通过；API 与测试项目构建：0 警告、0 错误。现有 Identity 数据库基线登记后增量迁移、空 PostgreSQL 从零迁移和排行榜烟测均通过。
+- 公网 `/health` 返回 200 且数据库状态为 `ok`；公网冒烟已验证注册、大小写重复用户名、登录、错误密码、缺失/无效令牌、`/me`、登录限流，以及容器重启后的账户持久性。
+- Unity `6000.5.9f1` 批处理脚本编译通过；`V1ProjectSetup.ValidateV1` 退出码为 0，日志包含 `JUMPING_NINJA_V1_VALIDATION_OK`；4 个 Online EditMode 测试全部通过。Windows x64 构建日志包含 `JUMPING_NINJA_WINDOWS_BUILD_OK`，并已生成不含 Burst 调试目录的验证 ZIP。
+- 历史 `online-leaderboard` Windows 验证构建曾通过 Unity 6000.5.9f1 导出；其目录和 ZIP 已在 2026-09-03 清理，并由下方 `import-fix` 修复版完全取代。
+- Android APK 本轮未生成：本机 Unity 6000.5.9f1 没有安装 `PlaybackEngines/AndroidPlayer` 模块，Unity 返回“无法切换到 Android build target”；仓库中不把旧 APK 冒充本轮构建。
+- 用户已于 2026-09-03 授权并完成本地 commit；尚未 push、创建 tag 或 GitHub Release，构建产物不纳入 Git。
+- 2026-09-03 已完成生产部署：数据库卷未重建，原有 3 个账号保留；迁移历史包含 `IdentityBaseline` 和 `AddOnlineLeaderboard`。运行镜像为 `sha256:2e31c3ccc1da50e4958693b925c1726147a9a43f94ce7f5c5147cee004750024`，旧镜像保留为 `jumping-ninja-auth-api:pre-leaderboard-20260903`。
+- 部署前 PostgreSQL 备份为 `/opt/jumping-ninja-auth/backups/jumpingninja-pre-leaderboard-20260903T123043Z.dump`，SHA-256 为 `E6D94D57B90DC54172D9FB1B939F11C3957FC9FF8489F8154D9ACEEDCBC11660`，权限 600，并已通过 `pg_restore -l` 验证可读。
+- 公网健康、完整排行榜流程、容器重启后的登录/成绩/榜单持久性均通过；未认证的新接口返回 401。验证账号已按精确账号 ID 级联删除，正式榜单未留下测试数据。
+- 2026-09-03 Import Old Ninjas 修复：导入请求现在在服务端以字符串接收并用 `Guid.TryParse` 兼容旧客户端的 `N` 格式与标准 `D` 格式；非法值返回稳定的 `legacy_profile_invalid`。客户端发送前统一为 `D` 格式，旧缓存比较也按规范化 GUID 处理。
+- 导入页未选中条目改为 `Paper` 浅底配 `Ink` 深字，选中后为红底白字并显示 `✓`；导入按钮仅在选中 1 项以上且未超容量时可用。失败或部分成功会保留失败项选择和错误提示，可直接重试，成功映射立即保存。
+- 修复版后端已部署：镜像 `sha256:e5cbeef430e7e327622eea5aa084f5502127e3afd9f3af8bcb4a3b8b95198f30`；部署前备份 `/opt/jumping-ninja-auth/backups/jumpingninja-pre-import-fix-20260903T130209Z.dump`，SHA-256 `DA29D3B158AA060FD2755352A7F7482D8688DCC13AC653608277C081EA07BE82`；旧排行榜镜像保留为 `jumping-ninja-auth-api:pre-import-fix-20260903`，未重建 PostgreSQL 卷。
+- 修复版 API 测试 27/27 通过；Unity `V1ProjectSetup.ValidateV1` 通过，Online EditMode 测试 7/7 通过。公网临时账号使用同一 GUID 的 `N` 首次导入、`D` 重试、非法 ID 检查均通过，随后按精确用户名清理。
+- `Builds/JumpingNinja-import-fix-Windows/JumpingNinja.exe` 已由 Unity `6000.5.9f1` 成功导出，构建总大小 117,959,561 字节；`Builds/JumpingNinja-import-fix-Windows.zip` 大小 44,973,390 字节，SHA-256 `90E0E2C6BA46459396BB538313CC291742EC1B285E039FE0F07F30D7EDC7083D`，已排除 Burst 调试目录。由于本次桌面 Computer Use 桥接未配置，未能在本机自动完成登录后导入页的点击式 GUI 验收；代码路径、Unity 测试和公网 N/D 烟测均已完成。
+- 2026-09-03 仓库清理：保留最新 `import-fix` EXE/ZIP 与正式 `v1.0.5` Windows 构建；删除已被取代的 `auth-test`、`auth-vps-test`、`online-leaderboard` 构建，以及 `Temp/`、`Logs/`、服务端 `bin/obj` 和最新构建中的 `BurstDebugInformation_DoNotShip`。这些内容均为可再生测试或中间产物，约释放 4.0 GB。
+- `.gitignore` 已重写并覆盖 Unity 缓存/构建、.NET 输出/测试结果、本地环境变量、密钥/签名材料、IDE 与操作系统文件；Unity `.meta`、服务端项目/迁移、测试和项目文档继续保持可提交，但本地代码记忆 `docs/ai/INDEX.md` 按要求不进入 Git。
 
 ## V1 已实现功能
 
@@ -42,11 +67,27 @@
 - `.agents/skills/windows-unity-release/SKILL.md`：仓库级 Windows Release 操作说明。
 - `ReleaseNotes/`：随仓库维护的各版本 GitHub Release Notes。
 - `Assets/Scripts/GameBootstrap.cs`：场景加载后自动建立 V1 游戏入口。
-- `Assets/Scripts/GameApp.cs`：加载页、用户创建、主菜单、排行榜、切换用户和游戏流程切换。
-- `Assets/Scripts/UserRepository.cs`：本地用户表和最高分持久化。
-- `Assets/Scripts/RuntimeUi.cs`：运行时 uGUI 创建工具与统一视觉样式。
+- `Assets/Scripts/GameApp.cs`：在线登录/注册/登出身份门禁，以及原有本地用户、主菜单、排行榜、切换用户和游戏流程切换。
+- `Assets/Scripts/Online/OnlineModels.cs`：在线认证、云端 Ninja、排行榜/目标 JSON 模型、账号隔离缓存和待同步成绩队列。
+- `Assets/Scripts/Online/AuthApiClient.cs`：UnityWebRequest 注册、登录、`/me`、Ninja、成绩、排行榜和目标请求及统一错误处理。
+- `Assets/Scripts/Online/LegacyUserModels.cs`：旧 `JumpingNinja.Users.v1` 的只读导入模型。
+- `Assets/Scripts/Online/JumpingNinja.Online.asmdef`：在线运行时程序集边界。
+- `Assets/Tests/EditMode/OnlineNinjaRepositoryTests.cs`：云端快照合并、账号隔离、待同步成绩和纪录判断测试。
+- `Assets/Scripts/UserRepository.cs`：本地旧用户表和最高分持久化，作为迁移源而非在线权威数据。
+- `Assets/Scripts/RuntimeUi.cs`：运行时 uGUI 创建工具、统一视觉样式和密码输入框。
 - `Assets/Scripts/PortraitViewport.cs`：Windows 可缩放窗口下的 9:16 相机视口与黑边适配。
 - `Assets/Scripts/JumpingNinjaConfig.cs`：Inspector 可调参数定义。
+- `Server/JumpingNinja.Api/`：ASP.NET Core 10 认证 API、Identity、JWT 和限流。
+- `Server/JumpingNinja.Api/Data/`：`NinjaProfiles`、`AccountLeaderboardEntries`、`LegacyNinjaImports` 数据模型。
+- `Server/JumpingNinja.Api/Migrations/`：`IdentityBaseline` 与 `AddOnlineLeaderboard` 增量迁移。
+- `Server/JumpingNinja.Api/Leaderboard/`：排行榜 DTO、规则、事务服务和 API 端点。
+- `Server/JumpingNinja.Tests/`：认证、排行榜、归属、导入、聚合、JWT 和限流自动化测试。
+- `Server/docker-compose.yml`、`Server/Dockerfile`：本地 API/PostgreSQL 容器编排和镜像构建。
+- `Server/docker-compose.vps.yml`：VPS Production API/PostgreSQL 编排；VPS 环境文件只保存在服务器，不进入仓库。
+- `Server/jumpingninja.dukechen.top.nginx.conf`：公网域名的 Nginx HTTP 跳转、HTTPS 终止和认证 API 反向代理配置模板。
+- `Server/verify-auth.ps1`：健康检查、注册/登录/身份校验/限流烟测，可选验证容器重启后的账户持久性。
+- `Server/verify-leaderboard.ps1`：创建 Ninja、提交成绩、聚合榜、目标、重启持久性烟测。
+- `Server/baseline-existing-database.sql`：现有 EnsureCreated Identity 数据库的安全基线登记脚本。
 - `Assets/Scripts/Gameplay/GameController.cs`：单局状态、HUD、计分、纪录提示、暂停和结算。
 - `Assets/Scripts/Gameplay/NinjaController.cs`：Ninja 物理、左右转向和碰撞规则。
 - `Assets/Art/Ninja/ninja-head.png`：透明背景的红色方形忍者头像。
@@ -71,6 +112,7 @@
 - 预生成层数
 - 地图随机种子：`0` 表示每局随机，非零值表示生成可复现地图
 - 加载时间、提示持续时间和主要颜色
+- 在线认证 API 地址 `authApiBaseUrl`（当前为 `https://jumpingninja.dukechen.top:9443`）和请求超时 `authRequestTimeoutSeconds`（默认 10 秒）
 
 ## Android 设置
 
@@ -111,6 +153,11 @@
 - 2026-08-28 v1.0.2 更新在已打开的 Unity `6000.5.9f1` 编辑器中成功导入浅色墙砖，Tundra 完成运行时和 Editor 程序集编译；`V1ProjectSetup.ValidateV1` 验证墙砖引用、版本名 `1.0.2` 和 Android Version Code `2` 后通过。移除一次性验证入口后的最终清理编译同样成功。
 - 2026-08-29 碰撞重构由 Unity `6000.5.9f1` 两次完成 Tundra 脚本构建：首次完整构建更新 10 项，第二次增量构建更新 1 项，均成功且无 C# 编译错误。批处理在编译后的 Unity 域重载阶段长时间无日志并持续增长内存，因此为保护开发机主动停止，未取得本轮 `V1ProjectSetup.ValidateV1` 的最终成功标记；碰撞箱范围检查已加入该验证方法。
 - 2026-08-30 清理损坏的可再生 `Library` 缓存并移除项目未引用的实验包 `com.unity.pipeline` 后，Unity `6000.5.9f1` 完成全量资源导入、ARM64 IL2CPP/NDK 编译和 Gradle `assembleRelease`；增量构建最终以 `Build Finished, Result: Success`、返回码 0 退出。
+- 2026-09-01 在线认证工作区后端测试通过 19/19，VPS 公网健康检查、认证流程、限流和 Compose 重启持久化烟测通过；本机认证 Compose 保持停止且本地数据库卷未删除。
+- 2026-09-01 Unity `6000.5.9f1` 完成在线认证版脚本编译与 `V1ProjectSetup.ValidateV1` 校验，Windows x64 构建日志包含 `JUMPING_NINJA_WINDOWS_BUILD_OK`，无 C# 编译/构建错误；GUI 冒烟覆盖注册自动登录、主动登出、再次登录和程序重启要求登录。
+- 2026-09-01 曾生成 `Builds/JumpingNinja-auth-vps-test-Windows.zip`：44,954,591 字节，SHA-256 为 `E478D5591A7E2B1ACA00069D68E2CA8E87392DACFAB94BDB6E74C076BCF35801`；该测试构建已在 2026-09-03 清理。
+- 2026-09-02 联网排行榜实施版验证：后端测试 26/26；现有 Identity 数据库执行基线登记加 `AddOnlineLeaderboard` 迁移、空 PostgreSQL 从零迁移和容器重启持久性烟测均通过；Unity 6000.5.9f1 脚本编译、`V1ProjectSetup.ValidateV1` 和 4 个 Online EditMode 测试均通过。
+- 2026-09-02 曾在一次性 `Temp/BuildVerification-2310` 中生成排行榜验证 ZIP；该验证目录已在 2026-09-03 清理。AndroidPlayer 模块缺失，因此本轮未生成 APK。
 - `Builds/JumpingNinja-v1.0.3.apk` 的包名为 `com.potatoedmice.jumpingninja`，Version Name 为 `1.0.3`，Version Code 为 `3`，最低 API 为 26；文件大小 39,462,249 字节，SHA-256 为 `2886FC0E9D1280A23186070C214DAEEDF264877B9E1B82FD7C6AC45B78E13A0C`。
 - APK 签名结构已通过 `apksigner` 验证（APK Signature Scheme v2）；当前签名证书为 Unity 使用的 Android Debug 证书。
 - v1.0.3 已作为正式 Git 标签和 GitHub Release 发布，Release 地址为 `https://github.com/LeonY34/JumpingNinja/releases/tag/v1.0.3`，APK 资源状态为 `uploaded`。
@@ -127,12 +174,15 @@
 ## 仓库清理
 
 - 已从 Git 移除 `.DS_Store` 和 `.vscode` 个人配置。
-- `.gitignore` 已覆盖 macOS/Windows 元数据、VS Code/Rider 配置、Unity `Library/Temp/Obj/Build/Logs/UserSettings`、IDE 工程文件及 APK/AAB 构建产物。
+- `.gitignore` 已覆盖 macOS/Windows 元数据、IDE 配置、Unity `Library/Temp/Obj/Builds/Logs/UserSettings`、.NET `bin/obj/TestResults`、本地 `.env`/密钥与 APK/AAB 等构建产物；`.env.example` 和服务端源码项目仍可跟踪。
 
 ## 后续注意事项
 
 - 背景、安全白墙与致死黑块均已有忍者主题纹理；背景和黑块具备动态配色，但尚无音效或粒子效果。
-- 用户及排行榜完全保存在本机，不包含联网账户或云排行榜。
+- 旧 `JumpingNinja.Users.v1` 仍保存在设备并作为只读导入源；登录后的在线 Ninja、账号最高分和联网排行榜以云端快照为权威，本地只保留按账号分区的非敏感缓存与待同步最高分。JWT 不写入 `PlayerPrefs` 或本地 JSON。
+- Windows 构建前需在 Unity Hub 手动登录可用 Unity 账户；Unity Hub 的认证窗口不得由自动化脚本代操作。
 - 当前 Build Settings 仍使用 `Assets/Scenes/SampleScene.unity`；游戏内容由运行时 Bootstrap 构建。
-- 切换用户页面当前显示排行榜前 8 个用户，足够 V1 使用；用户规模扩大时应改为滚动列表。
+- 在线切换 Ninja 页面使用滚动列表并显示 `数量 / 20`、云端最佳分和待同步标记；联网排行榜使用滚动行、当前账号高亮及前 100 名之外的 `YOUR RANK`。
 - 当前 v1.0.5 APK 使用 Android Debug 证书签名，Windows EXE 未进行代码签名；后续若作为正式长期分发版本，应配置并妥善保存 Android keystore，并考虑为 Windows 程序配置代码签名证书。
+- 本地后端当前可按需运行；如需本地回归测试，在 `Server` 目录执行 `docker compose --env-file .env.local up -d --build`，再运行 `Invoke-WebRequest http://127.0.0.1:5050/health`、`.\verify-auth.ps1` 和 `.\verify-leaderboard.ps1 -VerifyPersistence`。VPS 公网健康地址为 `https://jumpingninja.dukechen.top:9443/health`；生产环境停止时不要附加 `-v`，避免删除账户卷。
+- 当前公网 VPS 已运行联网排行榜 API；后续部署继续保留 `backups/` 中的数据库备份与旧镜像标签，禁止使用 `docker compose down -v`。

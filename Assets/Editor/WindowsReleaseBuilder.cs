@@ -11,6 +11,7 @@ namespace JumpingNinjaEditor
     {
         private const string DefaultOutputPath = "Builds/JumpingNinja-v1.0.5-Windows/Jumping Ninja.exe";
 
+        [MenuItem("Jumping Ninja/Build Windows Release")]
         public static void Build()
         {
             string outputPath = GetArgumentValue("-windowsOutputPath") ?? DefaultOutputPath;

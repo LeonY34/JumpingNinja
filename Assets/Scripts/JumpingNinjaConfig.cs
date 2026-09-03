@@ -66,6 +66,10 @@ namespace JumpingNinja
         public Color wallColor = Color.white;
         public Color hazardColor = new Color(0.025f, 0.03f, 0.04f, 1f);
 
+        [Header("Online Authentication")]
+        public string authApiBaseUrl = "https://jumpingninja.dukechen.top:9443";
+        [Min(1)] public int authRequestTimeoutSeconds = 10;
+
         public int SafeMapWidth => Mathf.Max(8, mapWidth);
         public int SafeLayerHeight => Mathf.Max(8, layerHeight);
         public float SafeCameraWidth => Mathf.Clamp(cameraVisibleWidth, 5f, SafeMapWidth);

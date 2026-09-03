@@ -6,21 +6,13 @@ using UnityEngine;
 namespace JumpingNinja
 {
     [Serializable]
-    public sealed class UserProfile
-    {
-        public string id;
-        public string name;
-        public int bestScore;
-    }
-
-    [Serializable]
     internal sealed class UserDatabase
     {
         public List<UserProfile> users = new List<UserProfile>();
         public string activeUserId;
     }
 
-    public sealed class UserRepository
+    public sealed class UserRepository : ILegacyNinjaSource
     {
         private const string StorageKey = "JumpingNinja.Users.v1";
         private UserDatabase database;
