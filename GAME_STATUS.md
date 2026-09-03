@@ -8,7 +8,7 @@
 - 最近更新：2026-09-03
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android、Windows x64
-- 状态：在线认证与联网排行榜实施版已部署到 VPS；旧 Ninja 导入兼容修复已完成公网烟测，最新 Windows x64 可执行文件和 ZIP 已导出并已本地 commit，尚未 push/tag/release
+- 状态：在线认证与联网排行榜实施版已部署到 VPS；远端 `codex/duke-chen` 已快进合并并推送至 `main`，尚未创建新 tag 或 GitHub Release
 
 ## 在线认证与联网排行榜实施版（VPS 已部署）
 
@@ -23,7 +23,7 @@
 - Unity `6000.5.9f1` 批处理脚本编译通过；`V1ProjectSetup.ValidateV1` 退出码为 0，日志包含 `JUMPING_NINJA_V1_VALIDATION_OK`；4 个 Online EditMode 测试全部通过。Windows x64 构建日志包含 `JUMPING_NINJA_WINDOWS_BUILD_OK`，并已生成不含 Burst 调试目录的验证 ZIP。
 - 历史 `online-leaderboard` Windows 验证构建曾通过 Unity 6000.5.9f1 导出；其目录和 ZIP 已在 2026-09-03 清理，并由下方 `import-fix` 修复版完全取代。
 - Android APK 本轮未生成：本机 Unity 6000.5.9f1 没有安装 `PlaybackEngines/AndroidPlayer` 模块，Unity 返回“无法切换到 Android build target”；仓库中不把旧 APK 冒充本轮构建。
-- 用户已于 2026-09-03 授权并完成本地 commit；尚未 push、创建 tag 或 GitHub Release，构建产物不纳入 Git。
+- 用户已于 2026-09-03 授权并完成本地 commit；该提交已合并并推送至 `main`，尚未创建 tag 或 GitHub Release，构建产物不纳入 Git。
 - 2026-09-03 已完成生产部署：数据库卷未重建，原有 3 个账号保留；迁移历史包含 `IdentityBaseline` 和 `AddOnlineLeaderboard`。运行镜像为 `sha256:2e31c3ccc1da50e4958693b925c1726147a9a43f94ce7f5c5147cee004750024`，旧镜像保留为 `jumping-ninja-auth-api:pre-leaderboard-20260903`。
 - 部署前 PostgreSQL 备份为 `/opt/jumping-ninja-auth/backups/jumpingninja-pre-leaderboard-20260903T123043Z.dump`，SHA-256 为 `E6D94D57B90DC54172D9FB1B939F11C3957FC9FF8489F8154D9ACEEDCBC11660`，权限 600，并已通过 `pg_restore -l` 验证可读。
 - 公网健康、完整排行榜流程、容器重启后的登录/成绩/榜单持久性均通过；未认证的新接口返回 401。验证账号已按精确账号 ID 级联删除，正式榜单未留下测试数据。
@@ -134,6 +134,7 @@
 
 ## 验证记录
 
+- 2026-09-03 `origin/codex/duke-chen` 基于当时 `main` 单提交前进，已使用 `--ff-only` 无冲突合并；Unity `6000.5.9f1` 完成全部脚本编译，新增 EditMode 测试通过 7/7。服务端测试项目要求 .NET 10 SDK，本机仅有 Unity 附带的 .NET 8 SDK且无 Docker，因此本轮未重复运行服务端测试。
 - 2026-08-30 v1.0.5 使用 Unity `6000.5.9f1` 完成脚本编译与 `V1ProjectSetup.ValidateV1` 校验，日志包含 `JUMPING_NINJA_V1_VALIDATION_OK`，无 C# 编译错误；Android 与 StandaloneWindows64 构建均成功。
 - `Builds/JumpingNinja-v1.0.5.apk` 大小为 39,438,533 字节，SHA-256 为 `9449BE93740B073E86CB33A5B665F873FDC981D99490B38ACDF9026A30EF7EA9`；包名、Version Name、Version Code、最低/目标 API 分别为 `com.potatoedmice.jumpingninja`、`1.0.5`、`5`、`26`/`36`，APK Signature Scheme v2 验证通过，证书仍为 Android Debug。
 - `JumpingNinja-v1.0.5-Windows.zip` 已排除 Unity 的 `BurstDebugInformation_DoNotShip` 目录，大小为 43,903,184 字节，SHA-256 为 `61086137779122A926E603C0191FAD193AD2DE106D6C7627C4D55B82B9A9779A`；ZIP 包含 EXE、Data、Mono 运行时及所需 DLL，EXE 未进行代码签名。
