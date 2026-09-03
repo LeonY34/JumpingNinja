@@ -9,7 +9,7 @@ namespace JumpingNinjaEditor
 {
     public static class WindowsReleaseBuilder
     {
-        private const string DefaultOutputPath = "Builds/JumpingNinja-v1.0.5-Windows/Jumping Ninja.exe";
+        private const string DefaultOutputPath = "Builds/JumpingNinja-v1.0.6-Windows/Jumping Ninja.exe";
 
         [MenuItem("Jumping Ninja/Build Windows Release")]
         public static void Build()
@@ -17,9 +17,9 @@ namespace JumpingNinjaEditor
             string outputPath = GetArgumentValue("-windowsOutputPath") ?? DefaultOutputPath;
             outputPath = Path.GetFullPath(outputPath);
 
-            if (PlayerSettings.bundleVersion != "1.0.5")
+            if (PlayerSettings.bundleVersion != "1.0.6")
             {
-                throw new InvalidOperationException("Windows release version must be v1.0.5.");
+                throw new InvalidOperationException("Windows release version must be v1.0.6.");
             }
 
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.StandaloneWindows64)

@@ -30,7 +30,7 @@ services:
     ports:
       - "127.0.0.1:15050:8080"
     volumes:
-      - jumping_ninja_dataprotection:/root/.aspnet/DataProtection-Keys
+      - jumping_ninja_dataprotection:/home/app/.aspnet/DataProtection-Keys
     networks:
       - auth
     depends_on:

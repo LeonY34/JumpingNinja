@@ -4,11 +4,11 @@
 
 ## 当前版本
 
-- 游戏版本：v1.0.5
+- 游戏版本：v1.0.6
 - 最近更新：2026-09-03
 - Unity：6000.5.9f1（arm64）
 - 当前构建目标：Android、Windows x64
-- 状态：在线认证与联网排行榜实施版已部署到 VPS；远端 `codex/duke-chen` 已快进合并并推送至 `main`，尚未创建新 tag 或 GitHub Release
+- 状态：在线认证与联网排行榜已合并；v1.0.6 已完成安全审计与发布准备，等待双平台构建和 GitHub Release
 
 ## 在线认证与联网排行榜实施版（VPS 已部署）
 
@@ -123,8 +123,8 @@
 - Scripting Backend：IL2CPP
 - Product Name：Jumping Ninja
 - Company Name：Potatoed Mice
-- Version Name：1.0.5
-- Android Version Code：5
+- Version Name：1.0.6
+- Android Version Code：6
 
 ## Windows 设置
 
@@ -134,6 +134,10 @@
 
 ## 验证记录
 
+- 2026-09-03 v1.0.6 发布前安全检查：当前 Git 历史与跟踪文件未发现真实 `.env`、私钥、keystore 或 GitHub token；客户端 JWT 仅保存在内存，不写入 `PlayerPrefs`。公网 `/health` 返回 200 且数据库为 `ok`，TLS 证书有效期至 2026-11-30，HSTS 已启用。
+- 使用微软官方 .NET SDK `10.0.400`（SHA-512 校验通过）重新构建并测试后端，27/27 测试通过；NuGet 直接与传递依赖的已知漏洞扫描结果为 0。ASP.NET Core / EF Core 已更新到 `10.0.11`，Npgsql 更新到 `10.0.3`，测试运行器更新到 `3.1.5`。
+- 仓库中的生产容器配置已固定到 .NET SDK `10.0.400` / Runtime `10.0.11` 并切换为非 root 用户；Nginx 模板补充隐藏版本、`nosniff`、无 Referrer 和 `no-store`。这些服务器配置修改尚未部署到 VPS，当前线上服务仍为上一部署版本。
+- 排行榜写入严格校验 JWT 账号与 Ninja 归属，并有限流、非负校验及数据库约束；但游戏客户端本身不可信，当前协议无法证明分数来自真实一局，因此修改客户端的用户仍可伪造高分。这是当前已知的反作弊风险，不属于凭据泄露或越权访问。
 - 2026-09-03 `origin/codex/duke-chen` 基于当时 `main` 单提交前进，已使用 `--ff-only` 无冲突合并；Unity `6000.5.9f1` 完成全部脚本编译，新增 EditMode 测试通过 7/7。服务端测试项目要求 .NET 10 SDK，本机仅有 Unity 附带的 .NET 8 SDK且无 Docker，因此本轮未重复运行服务端测试。
 - 2026-08-30 v1.0.5 使用 Unity `6000.5.9f1` 完成脚本编译与 `V1ProjectSetup.ValidateV1` 校验，日志包含 `JUMPING_NINJA_V1_VALIDATION_OK`，无 C# 编译错误；Android 与 StandaloneWindows64 构建均成功。
 - `Builds/JumpingNinja-v1.0.5.apk` 大小为 39,438,533 字节，SHA-256 为 `9449BE93740B073E86CB33A5B665F873FDC981D99490B38ACDF9026A30EF7EA9`；包名、Version Name、Version Code、最低/目标 API 分别为 `com.potatoedmice.jumpingninja`、`1.0.5`、`5`、`26`/`36`，APK Signature Scheme v2 验证通过，证书仍为 Android Debug。
@@ -184,6 +188,6 @@
 - Windows 构建前需在 Unity Hub 手动登录可用 Unity 账户；Unity Hub 的认证窗口不得由自动化脚本代操作。
 - 当前 Build Settings 仍使用 `Assets/Scenes/SampleScene.unity`；游戏内容由运行时 Bootstrap 构建。
 - 在线切换 Ninja 页面使用滚动列表并显示 `数量 / 20`、云端最佳分和待同步标记；联网排行榜使用滚动行、当前账号高亮及前 100 名之外的 `YOUR RANK`。
-- 当前 v1.0.5 APK 使用 Android Debug 证书签名，Windows EXE 未进行代码签名；后续若作为正式长期分发版本，应配置并妥善保存 Android keystore，并考虑为 Windows 程序配置代码签名证书。
+- 当前 v1.0.6 APK 计划继续使用 Android Debug 证书签名，Windows EXE 未进行代码签名；后续若作为正式长期分发版本，应配置并妥善保存 Android keystore，并考虑为 Windows 程序配置代码签名证书。
 - 本地后端当前可按需运行；如需本地回归测试，在 `Server` 目录执行 `docker compose --env-file .env.local up -d --build`，再运行 `Invoke-WebRequest http://127.0.0.1:5050/health`、`.\verify-auth.ps1` 和 `.\verify-leaderboard.ps1 -VerifyPersistence`。VPS 公网健康地址为 `https://jumpingninja.dukechen.top:9443/health`；生产环境停止时不要附加 `-v`，避免删除账户卷。
 - 当前公网 VPS 已运行联网排行榜 API；后续部署继续保留 `backups/` 中的数据库备份与旧镜像标签，禁止使用 `docker compose down -v`。
