@@ -164,6 +164,9 @@ namespace JumpingNinja
             input.characterLimit = 16;
             input.lineType = InputField.LineType.SingleLine;
             input.contentType = InputField.ContentType.Standard;
+            input.inputType = InputField.InputType.Standard;
+            input.keyboardType = TouchScreenKeyboardType.Default;
+            input.shouldHideMobileInput = false;
             return input;
         }
 
@@ -171,7 +174,12 @@ namespace JumpingNinja
         {
             InputField input = CreateInputField(name, parent, placeholder);
             input.characterLimit = 72;
-            input.contentType = InputField.ContentType.Password;
+            // Use the standard IME path and apply masking explicitly. Some Xiaomi
+            // keyboards reject Unity's legacy ContentType.Password configuration.
+            input.contentType = InputField.ContentType.Standard;
+            input.inputType = InputField.InputType.Password;
+            input.keyboardType = TouchScreenKeyboardType.Default;
+            input.shouldHideMobileInput = false;
             return input;
         }
 

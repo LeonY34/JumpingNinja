@@ -48,12 +48,23 @@ namespace JumpingNinja
 
             body = gameObject.AddComponent<Rigidbody2D>();
             body.bodyType = RigidbodyType2D.Dynamic;
-            body.simulated = true;
+            body.simulated = false;
             body.gravityScale = config.gravityScale;
             body.freezeRotation = true;
             body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             body.interpolation = RigidbodyInterpolation2D.Interpolate;
 
+            Physics2D.SyncTransforms();
+        }
+
+        public void BeginFall()
+        {
+            if (body == null || !alive)
+            {
+                return;
+            }
+
+            body.simulated = true;
             Physics2D.SyncTransforms();
         }
 

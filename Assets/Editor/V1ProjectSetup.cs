@@ -110,9 +110,9 @@ namespace JumpingNinjaEditor
                 throw new System.InvalidOperationException($"Unexpected Android application identifier: {identifier}");
             }
 
-            if (PlayerSettings.bundleVersion != "1.0.6" || PlayerSettings.Android.bundleVersionCode != 6)
+            if (PlayerSettings.bundleVersion != "1.0.7" || PlayerSettings.Android.bundleVersionCode != 7)
             {
-                throw new System.InvalidOperationException("The release version is not configured as v1.0.6.");
+                throw new System.InvalidOperationException("The release version is not configured as v1.0.7.");
             }
 
             if (PlayerSettings.defaultScreenWidth != 540 || PlayerSettings.defaultScreenHeight != 960 ||
@@ -134,8 +134,8 @@ namespace JumpingNinjaEditor
         {
             PlayerSettings.companyName = "Potatoed Mice";
             PlayerSettings.productName = "Jumping Ninja";
-            PlayerSettings.bundleVersion = "1.0.6";
-            PlayerSettings.Android.bundleVersionCode = 6;
+            PlayerSettings.bundleVersion = "1.0.7";
+            PlayerSettings.Android.bundleVersionCode = 7;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.potatoedmice.jumpingninja");
             PlayerSettings.defaultScreenWidth = 540;
             PlayerSettings.defaultScreenHeight = 960;

@@ -44,8 +44,9 @@ namespace JumpingNinja
         private bool paused;
         private bool countingDown;
         private bool dead;
+        private bool waitingForStart;
 
-        public bool AcceptsInput => !paused && !countingDown && !dead;
+        public bool AcceptsInput => !waitingForStart && !paused && !countingDown && !dead;
 
         internal void Initialize(
             GameApp owner,
@@ -58,6 +59,7 @@ namespace JumpingNinja
             ninjas = ninjaRepository;
             onlineTargets = targetSnapshot;
             Time.timeScale = 1f;
+            waitingForStart = true;
 
             CaptureRecordTargets();
             CreateWorld();
@@ -128,7 +130,7 @@ namespace JumpingNinja
         private void HandleKeyboardInput()
         {
             Keyboard keyboard = Keyboard.current;
-            if (!AcceptsInput || keyboard == null)
+            if (paused || countingDown || dead || keyboard == null)
             {
                 return;
             }
@@ -140,7 +142,23 @@ namespace JumpingNinja
                 return;
             }
 
-            ninja.Steer(rightPressed);
+            BeginFromInput(rightPressed);
+        }
+
+        private void BeginFromInput(bool moveRight)
+        {
+            if (dead || paused || countingDown || ninja == null)
+            {
+                return;
+            }
+
+            if (waitingForStart)
+            {
+                waitingForStart = false;
+                ninja.BeginFall();
+            }
+
+            ninja.Steer(moveRight);
         }
 
         public void KillPlayer()
@@ -249,8 +267,8 @@ namespace JumpingNinja
             gameCanvas.transform.SetParent(transform, false);
             gameContent = RuntimeUi.Content(gameCanvas);
 
-            CreateInputZone("Left Input", new Vector2(0f, 0f), new Vector2(0.5f, 1f), () => ninja.Steer(false));
-            CreateInputZone("Right Input", new Vector2(0.5f, 0f), new Vector2(1f, 1f), () => ninja.Steer(true));
+            CreateInputZone("Left Input", new Vector2(0f, 0f), new Vector2(0.5f, 1f), () => BeginFromInput(false));
+            CreateInputZone("Right Input", new Vector2(0.5f, 0f), new Vector2(1f, 1f), () => BeginFromInput(true));
 
             Image scorePanel = RuntimeUi.CreateImage("Score Panel", gameContent, new Color(0.04f, 0.05f, 0.07f, 0.82f));
             scorePanel.raycastTarget = false;

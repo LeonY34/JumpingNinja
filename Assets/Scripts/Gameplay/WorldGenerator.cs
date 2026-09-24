@@ -107,11 +107,11 @@ namespace JumpingNinja
             segmentRoot.transform.SetParent(transform, false);
             segments.Add(segmentIndex, segmentRoot);
 
-            for (int y = startY; y < startY + layerHeight; y++)
-            {
-                CreateBlock(segmentRoot.transform, $"Left Wall {y}", new Vector2(0.5f, y + 0.5f), Vector2.one, config.wallColor, false, true);
-                CreateBlock(segmentRoot.transform, $"Right Wall {y}", new Vector2(mapWidth - 0.5f, y + 0.5f), Vector2.one, config.wallColor, false, true);
-            }
+            // One continuous collider per side removes seams between tile colliders.
+            Vector2 wallSize = new Vector2(1f, layerHeight);
+            float wallCenterY = startY + layerHeight * 0.5f;
+            CreateBlock(segmentRoot.transform, $"Left Wall {startY}-{boundaryY}", new Vector2(0.5f, wallCenterY), wallSize, config.wallColor, false, true);
+            CreateBlock(segmentRoot.transform, $"Right Wall {startY}-{boundaryY}", new Vector2(mapWidth - 0.5f, wallCenterY), wallSize, config.wallColor, false, true);
 
             List<int> upperGaps = GetOrCreateBoundaryGaps(segmentIndex + 1);
             for (int x = 1; x < mapWidth - 1; x++)
@@ -271,11 +271,19 @@ namespace JumpingNinja
             renderer.color = usesHazardArt ? config.GetHazardTint(level) : color;
             renderer.sortingOrder = 0;
 
-            Vector2 spriteSize = renderer.sprite.bounds.size;
-            visual.transform.localScale = new Vector3(
-                size.x / Mathf.Max(0.0001f, spriteSize.x),
-                size.y / Mathf.Max(0.0001f, spriteSize.y),
-                1f);
+            if (isWall && size.y > 1f)
+            {
+                renderer.drawMode = SpriteDrawMode.Tiled;
+                renderer.size = size;
+            }
+            else
+            {
+                Vector2 spriteSize = renderer.sprite.bounds.size;
+                visual.transform.localScale = new Vector3(
+                    size.x / Mathf.Max(0.0001f, spriteSize.x),
+                    size.y / Mathf.Max(0.0001f, spriteSize.y),
+                    1f);
+            }
 
             if (isHazard)
             {
